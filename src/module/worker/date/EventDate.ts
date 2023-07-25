@@ -69,22 +69,23 @@ export class EventDate {
     }
 
     toGCalDate(): GCalDateTime {
-        if ('date' in this.start && 'date' in this.end) {
+        if ('date' in this.start) {
             return {
                 start: {
                     date: this.start.date,
                     dateTime: null,
                 },
                 end: {
-                    date: this.end?.date
-                        ? dayjs(this.end.date)
-                              .add(1, 'day')
-                              .format('YYYY-MM-DD')
-                        : this.start.date,
+                    date:
+                        this.end && 'date' in this.end
+                            ? dayjs(this.end.date)
+                                  .add(1, 'day')
+                                  .format('YYYY-MM-DD')
+                            : this.start.date,
                     dateTime: null,
                 },
             };
-        } else if ('dateTime' in this.start && 'dateTime' in this.end) {
+        } else if ('dateTime' in this.start) {
             return {
                 start: {
                     dateTime: dayjs(this.start.dateTime).format(
@@ -94,7 +95,9 @@ export class EventDate {
                 },
                 end: {
                     dateTime: dayjs(
-                        this.end?.dateTime || this.start.dateTime,
+                        this.end && 'dateTime' in this.end
+                            ? this.end.dateTime
+                            : this.start.dateTime,
                     ).format('YYYY-MM-DDTHH:mm:ssZ'),
                     date: null,
                 },
