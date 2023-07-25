@@ -2,7 +2,7 @@ import { UserPlan } from '@opize/calendar2notion-object';
 import { RunnerService, runnerService } from './runner.service';
 import { context } from '../context';
 import { InitUserLoop, Loop, UserLoop } from './loop';
-import { runnerLogger } from 'src/logger/winston';
+import { runnerLogger } from '@/logger/winston';
 
 export class Runner {
     runnerService: RunnerService;
