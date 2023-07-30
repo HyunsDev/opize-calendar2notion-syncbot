@@ -26,8 +26,11 @@
     "scripts": {
         "dev": "ts-node -r tsconfig-paths/register ./src/index.ts",
         "test": "jest --detectOpenHandles",
-        "build": "tsc -p tsconfig.json && tsc-alias",
-        "lint": "eslint \"{src,apps,libs}/**/*.ts\" --fix"
+        "build": "rm -rf dist && tsc -p tsconfig.json && tsc-alias",
+        "lint": "eslint \"{src,apps,libs}/**/*.ts\" --fix",
+        "docker:build": "docker buildx build --platform linux/amd64,linux/arm64/v8 -t opize/opize-calendar2notion-syncbot:latest . --push",
+        "docker:pull": "docker pull opize/opize-calendar2notion-syncbot:latest",
+        "docker:start": "docker stop opize-calendar2notion-syncbot || true && docker rm opize-calendar2notion-syncbot || true && yarn docker:pull && docker run -it -d --env-file .env --name opize-calendar2notion-syncbot --network host opize/opize-calendar2notion-syncbot:latest"
     },
     "devDependencies": {
         "@types/cors": "^2.8.12",
