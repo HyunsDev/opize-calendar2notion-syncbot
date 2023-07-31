@@ -2,7 +2,7 @@ import { CalendarEntity, UserEntity } from '@opize/calendar2notion-object';
 
 import { WorkerResult } from '../types/result';
 import { SyncConfig } from '../types/syncConfig';
-import { env } from 'src/env/env';
+import { env } from '@/env/env';
 
 import dayjs from 'dayjs';
 import timezone from 'dayjs/plugin/timezone';

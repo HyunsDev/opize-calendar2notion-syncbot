@@ -5,7 +5,7 @@ import { LessThan } from 'typeorm';
 
 import { Assist } from '../../types/assist';
 import { WorkContext } from '../../context/work.context';
-import { DB } from 'src/database';
+import { DB } from '@/database';
 import { NotionAssist, EventLinkAssist, GoogleCalendarAssist } from '..';
 
 export class WorkerAssist extends Assist {
