@@ -24,7 +24,7 @@
         "winston-daily-rotate-file": "^4.7.1"
     },
     "scripts": {
-        "dev": "ts-node -r tsconfig-paths/register ./src/index.ts",
+        "dev": "ts-node -r tsconfig-paths/register ./src/main.ts",
         "test": "jest --detectOpenHandles",
         "build": "rm -rf dist && tsc -p tsconfig.json && tsc-alias",
         "lint": "eslint \"{src,apps,libs}/**/*.ts\" --fix",
