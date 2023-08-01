@@ -19,6 +19,10 @@ export abstract class Loop {
 
     abstract run(): Promise<void>;
 
+    protected getStopSignal() {
+        return context.syncBot.stop;
+    }
+
     protected async runWorker(user: UserEntity) {
         const contextWorker = context.worker.workers.find(
             (worker) => worker.loopId === this.loopId,
@@ -100,6 +104,11 @@ export class InitUserLoop extends Loop {
 
     async run() {
         while (true) {
+            const stopSignal = this.getStopSignal();
+            if (stopSignal) {
+                break;
+            }
+
             const user = await this.runnerService.getUninitializedUser();
             if (!user) {
                 await sleep(1000 * 5);
@@ -128,6 +137,11 @@ export class UserLoop extends Loop {
 
     async run() {
         while (true) {
+            const stopSignal = this.getStopSignal();
+            if (stopSignal) {
+                break;
+            }
+
             const user = await this.runnerService.getTargetUserByPlan(
                 this.plan,
             );
