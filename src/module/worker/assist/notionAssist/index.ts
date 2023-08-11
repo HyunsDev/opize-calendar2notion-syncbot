@@ -2,7 +2,7 @@ import { CalendarEntity } from '@opize/calendar2notion-object';
 import dayjs from 'dayjs';
 import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
-import { calendar_v3 } from 'googleapis';
+import { calendar_v3, google } from 'googleapis';
 
 import { SyncErrorCode } from '../../error';
 import { NotionSyncError } from '../../error/notion.error';
@@ -12,6 +12,7 @@ import { EventLinkAssist } from '../eventLinkAssist';
 import { NotionAssistApi } from './api';
 import { WorkContext } from '../../context/work.context';
 import { DB } from '@/database';
+import { GetDatabaseResponse } from '@notionhq/client/build/src/api-endpoints';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -40,7 +41,8 @@ export class NotionAssist extends Assist {
     }
 
     public async validation() {
-        await this.checkProps();
+        const database = await this.api.getDatabase();
+        this.checkProps(database);
     }
 
     public async getDeletedPageIds() {
@@ -49,20 +51,12 @@ export class NotionAssist extends Assist {
 
     public async addCalendarProp(calendar: CalendarEntity) {
         // 속성 추가
-        const calendars: {
-            id?: string;
-            name: string;
-        }[] = this.context.calendars
-            .filter((e) => e.notionPropertyId)
-            .map((e) => ({
-                id: e.notionPropertyId,
-                name: e.googleCalendarName,
-            }));
-        calendars.push({
+        const calendarOptions = this.getCalendarOptions();
+        calendarOptions.push({
             name: calendar.googleCalendarName,
             id: undefined,
         });
-        const database = await this.api.updateCalendarProps(calendars);
+        const database = await this.api.updateCalendarProps(calendarOptions);
 
         // 새로운 속성 찾기
         const calendarProp: string = JSON.parse(
@@ -157,9 +151,7 @@ export class NotionAssist extends Assist {
         }
     }
 
-    private async checkProps() {
-        const res = await this.api.getDatabase();
-
+    private checkProps(database: GetDatabaseResponse) {
         const userProps: {
             title: string;
             calendar: string;
@@ -193,7 +185,7 @@ export class NotionAssist extends Assist {
         }
 
         for (const userProp in userProps) {
-            const prop = Object.values(res.properties).find(
+            const prop = Object.values(database.properties).find(
                 (e) => e.id === userProps[userProp],
             );
             if (!prop) {
@@ -225,5 +217,17 @@ export class NotionAssist extends Assist {
         }
 
         return true;
+    }
+
+    private getCalendarOptions(): {
+        id?: string;
+        name: string;
+    }[] {
+        return this.context.calendars
+            .filter((e) => e.notionPropertyId)
+            .map((e) => ({
+                id: e.notionPropertyId,
+                name: e.googleCalendarName,
+            }));
     }
 }
