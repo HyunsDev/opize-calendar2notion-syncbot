@@ -175,7 +175,7 @@ export class NotionAssistApi {
                 [props.calendar]: {
                     type: 'select',
                     select: {
-                        id: calendar.notionPropertyId,
+                        id: calendar.googleCalendarName,
                     },
                 },
                 [props.date]: {
@@ -360,7 +360,7 @@ export class NotionAssistApi {
                     },
                     [props.calendar]: {
                         select: {
-                            id: calendar.notionPropertyId,
+                            name: calendar.googleCalendarName,
                         },
                     },
                 },
