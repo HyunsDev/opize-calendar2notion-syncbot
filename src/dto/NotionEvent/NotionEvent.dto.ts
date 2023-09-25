@@ -3,6 +3,10 @@ import { CalendarEntity, UserNotionProps } from '@opize/calendar2notion-object';
 import dayjs from 'dayjs';
 
 import { EventDateTime, EventDto } from '../Event';
+import {
+    ProtoEvent,
+    ProtoEventConstructorProps,
+} from '../ProtoEvent/ProtoEvent';
 
 import { NotionDateTime } from './NotionDateTime.type';
 
@@ -23,72 +27,53 @@ const getProp = <
     return prop as Extract<P['properties'][string], { type: T }>;
 };
 
-export class NotionEventDto {
-    eventSource?: 'event' | 'originalEvent';
-
-    eventId?: string;
-    googleCalendarEventId?: string;
-    notionEventId?: string;
-    calendar: CalendarEntity;
-
+export interface NotionEventConstructorProps
+    extends ProtoEventConstructorProps {
     title: string;
-    status: boolean;
+    isDeleted: boolean;
+    location?: string;
+    description?: string;
+    date: NotionDateTime;
+    googleCalendarEventLink?: string;
+}
+
+export class NotionEventDto extends ProtoEvent {
+    title: string;
+    isDeleted: boolean;
     location?: string;
     description?: string;
     date: NotionDateTime;
     googleCalendarEventLink?: string;
 
-    originalNotionData?: PageObjectResponse;
-
-    constructor(data: {
-        eventSource: NotionEventDto['eventSource'];
-
-        eventId?: string;
-        googleCalendarEventId?: string;
-        notionEventId?: string;
-        calendar: CalendarEntity;
-
-        title: string;
-        status: boolean;
-        location?: string;
-        description?: string;
-        date: NotionDateTime;
-        googleCalendarEventLink?: string;
-
-        originalNotionData?: PageObjectResponse;
-    }) {
-        this.eventSource = data.eventSource;
-        this.eventId = data.eventId;
-        this.googleCalendarEventId = data.googleCalendarEventId;
-        this.calendar = data.calendar;
-        this.notionEventId = data.notionEventId;
-
+    constructor(data: NotionEventConstructorProps) {
+        super(data);
         this.title = data.title;
-        this.status = data.status;
+        this.isDeleted = data.isDeleted;
         this.location = data.location;
         this.description = data.description;
         this.date = data.date;
         this.googleCalendarEventLink = data.googleCalendarEventLink;
-
-        this.originalNotionData = data?.originalNotionData;
     }
 
     static fromEvent(event: EventDto): NotionEventDto {
         const notionEvent = new NotionEventDto({
-            eventSource: 'event',
+            eventSource: event.eventSource,
+
             eventId: event.eventId,
             googleCalendarEventId: event.googleCalendarEventId,
             calendar: event.calendar,
             notionEventId: event.notionEventId,
 
             title: event.title,
-            status: event.status === 'confirmed',
+            isDeleted: event.status === 'confirmed',
             location: event.location,
             description: event.description,
             date: NotionEventDto.convertDateFromEvent(event.date),
             googleCalendarEventLink: event.googleCalendarEventLink,
 
-            originalNotionData: undefined,
+            eventLink: event.eventLink,
+            originalNotionEvent: event.originalNotionEvent,
+            originalGoogleCalendarEvent: event.originalGoogleCalendarEvent,
         });
         return notionEvent;
     }
@@ -99,7 +84,7 @@ export class NotionEventDto {
         props: UserNotionProps,
     ) {
         const notionEvent = new NotionEventDto({
-            eventSource: 'originalEvent',
+            eventSource: 'notion',
 
             eventId: undefined,
             notionEventId: originalEvent.id,
@@ -110,7 +95,8 @@ export class NotionEventDto {
                 (pre, cur) => pre + cur.plain_text,
                 '',
             ),
-            status: getProp(originalEvent, props.delete, 'checkbox').checkbox,
+            isDeleted: getProp(originalEvent, props.delete, 'checkbox')
+                .checkbox,
             location: getProp(
                 originalEvent,
                 props.location,
@@ -125,9 +111,30 @@ export class NotionEventDto {
             googleCalendarEventLink: getProp(originalEvent, props.link, 'url')
                 .url,
 
-            originalNotionData: originalEvent,
+            originalNotionEvent: originalEvent,
         });
         return notionEvent;
+    }
+
+    toEvent(): EventDto {
+        const event = new EventDto({
+            eventSource: this.eventSource,
+
+            eventId: this.eventId,
+            googleCalendarEventId: this.googleCalendarEventId,
+            notionEventId: this.notionEventId,
+            calendar: this.calendar,
+
+            title: this.title,
+            status: this.isDeleted ? 'confirmed' : 'cancelled',
+            location: this.location,
+            description: this.description,
+            date: NotionEventDto.convertDateToEvent(this.date),
+            googleCalendarEventLink: this.googleCalendarEventLink,
+
+            originalNotionEvent: this.originalNotionEvent,
+        });
+        return event;
     }
 
     static convertDateToEvent(notionDate: NotionDateTime) {
@@ -198,26 +205,5 @@ export class NotionEventDto {
                 start: date.start,
             };
         }
-    }
-
-    toEvent(): EventDto {
-        const event = new EventDto({
-            eventSource: 'notionEvent',
-
-            eventId: this.eventId,
-            googleCalendarEventId: this.googleCalendarEventId,
-            notionEventId: this.notionEventId,
-            calendar: this.calendar,
-
-            title: this.title,
-            status: this.status ? 'confirmed' : 'cancelled',
-            location: this.location,
-            description: this.description,
-            date: NotionEventDto.convertDateToEvent(this.date),
-            googleCalendarEventLink: this.googleCalendarEventLink,
-
-            originalNotionEvent: this.originalNotionData,
-        });
-        return event;
     }
 }

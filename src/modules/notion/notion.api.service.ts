@@ -214,7 +214,7 @@ export class NotionAPIService {
                 [props.calendar]: {
                     type: 'select',
                     select: {
-                        name: event.googleCalendarName,
+                        name: event.calendar.googleCalendarName,
                     },
                 },
                 [props.date]: {
@@ -270,7 +270,7 @@ export class NotionAPIService {
                 [props.calendar]: {
                     type: 'select',
                     select: {
-                        name: event.googleCalendarName,
+                        name: event.calendar.googleCalendarName,
                     },
                 },
                 [props.date]: {

@@ -2,20 +2,27 @@ import { CalendarEntity } from '@opize/calendar2notion-object';
 import { calendar_v3 } from 'googleapis';
 
 import { EventDateTime, EventDto } from '../Event';
+import {
+    ProtoEvent,
+    ProtoEventConstructorProps,
+} from '../ProtoEvent/ProtoEvent';
 
 import { GoogleCalendarDateTime } from './GoogleCalendarDateTime.type';
+
+export interface GoogleCalendarEventConstructorProps
+    extends ProtoEventConstructorProps {
+    summary: string;
+    status: 'confirmed' | 'tentative' | 'cancelled';
+    location?: string;
+    description?: string;
+    date: GoogleCalendarDateTime;
+    googleCalendarEventLink?: string;
+}
 
 /**
  * Google Calendar의 이벤트와 Event를 사이를 연결하기 위한 DTO
  */
-export class GoogleCalendarEventDto {
-    eventSource?: 'event' | 'originalEvent';
-
-    eventId?: string;
-    googleCalendarEventId?: string;
-    notionEventId?: string;
-    calendar: CalendarEntity;
-
+export class GoogleCalendarEventDto extends ProtoEvent {
     summary: string;
     status: 'confirmed' | 'tentative' | 'cancelled';
     location?: string;
@@ -23,41 +30,13 @@ export class GoogleCalendarEventDto {
     date: GoogleCalendarDateTime;
     googleCalendarEventLink?: string;
 
-    /**
-     * `eventSource`가 `originalEvent`일 경우, 원본 데이터를 저장합니다.
-     */
-    readonly originalGoogleCalendarEvent: calendar_v3.Schema$Event;
-
-    constructor(data: {
-        eventSource: GoogleCalendarEventDto['eventSource'];
-
-        eventId?: string;
-        googleCalendarEventId?: string;
-        notionEventId?: string;
-        calendar: CalendarEntity;
-
-        summary: string;
-        status: 'confirmed' | 'tentative' | 'cancelled';
-        location?: string;
-        description?: string;
-        date: GoogleCalendarDateTime;
-        googleCalendarEventLink?: string;
-
-        originalGoogleCalendarEvent?: calendar_v3.Schema$Event;
-    }) {
-        this.eventSource = data.eventSource;
-        this.eventId = data.eventId;
-        this.googleCalendarEventId = data.googleCalendarEventId;
-        this.calendar;
-        this.notionEventId = data.notionEventId;
-
+    constructor(data: GoogleCalendarEventConstructorProps) {
+        super(data);
         this.summary = data.summary;
         this.status = data.status;
         this.location = data.location;
         this.description = data.description;
         this.date = data.date;
-
-        this.originalGoogleCalendarEvent = data?.originalGoogleCalendarEvent;
     }
 
     /**
@@ -79,7 +58,9 @@ export class GoogleCalendarEventDto {
             description: event.description,
             googleCalendarEventLink: event.googleCalendarEventLink,
 
-            originalGoogleCalendarEvent: undefined,
+            eventLink: event.eventLink,
+            originalNotionEvent: event.originalNotionEvent,
+            originalGoogleCalendarEvent: event.originalGoogleCalendarEvent,
         });
         return googleCalendarEvent;
     }
@@ -87,12 +68,12 @@ export class GoogleCalendarEventDto {
     /**
      * `calendar_v3.Schema$Event`를 받아 `GoogleCalendarEvent`로 변환합니다.
      */
-    static fromGoogleCalendarEvent(
+    static fromGoogleCalendar(
         originalEvent: calendar_v3.Schema$Event,
         calendar: CalendarEntity,
     ): GoogleCalendarEventDto {
         const googleCalendarEvent = new GoogleCalendarEventDto({
-            eventSource: 'originalEvent',
+            eventSource: 'googleCalendar',
 
             eventId: undefined,
             notionEventId: undefined,
@@ -116,14 +97,29 @@ export class GoogleCalendarEventDto {
         return googleCalendarEvent;
     }
 
-    merge() {}
-
     /**
      * `GoogleCalendarEvent`를 `Event`로 변환합니다.
      */
-    toEvent() {}
+    toEvent() {
+        const event = new EventDto({
+            eventSource: this.eventSource,
 
-    toGoogleCalendarEvent() {}
+            eventId: this.eventId,
+            notionEventId: this.notionEventId,
+            googleCalendarEventId: this.googleCalendarEventId,
+            calendar: this.calendar,
+
+            date: GoogleCalendarEventDto.convertDateToEvent(this.date),
+            status: this.status,
+            title: this.summary,
+            location: this.location,
+            description: this.description,
+            googleCalendarEventLink: this.googleCalendarEventLink,
+
+            originalGoogleCalendarEvent: this.originalGoogleCalendarEvent,
+        });
+        return event;
+    }
 
     static convertDateToEvent(
         googleCalendarEvent: GoogleCalendarDateTime,
