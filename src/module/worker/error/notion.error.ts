@@ -10,6 +10,7 @@ interface APIErrorProps {
     code: valueof<typeof SyncErrorCode.notion.api>;
     user: UserEntity;
     err?: APIResponseError;
+    args: any[];
 }
 
 const APIErrorMap: {
@@ -64,6 +65,7 @@ export class NotionAPIError extends SyncError {
                 body: props?.err?.body,
                 status: props?.err?.status,
                 code: props?.err?.code,
+                args: props.args,
             }),
         });
     }

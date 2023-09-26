@@ -10,6 +10,7 @@ interface ErrorProps {
     code: valueof<typeof SyncErrorCode.googleCalendar.api>;
     user: UserEntity;
     err?: GaxiosError;
+    args: any[];
 }
 
 const ErrorMap: {

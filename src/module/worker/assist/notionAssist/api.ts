@@ -3,7 +3,7 @@ import { PageObjectResponse } from '@notionhq/client/build/src/api-endpoints';
 import { CalendarEntity, EventEntity } from '@opize/calendar2notion-object';
 import { calendar_v3 } from 'googleapis';
 
-import { notionApi } from './api.decorator';
+import { NotionAPI } from './api.decorator';
 import { WorkContext } from '../../context/work.context';
 import { EventDate } from '../../date/EventDate';
 
@@ -22,14 +22,14 @@ export class NotionAssistApi {
         });
     }
 
-    @notionApi('database')
+    @NotionAPI('database')
     async getDatabase() {
         return await this.client.databases.retrieve({
             database_id: this.context.user.notionDatabaseId,
         });
     }
 
-    @notionApi('database')
+    @NotionAPI('database')
     async getDeletedPageIds() {
         const props: {
             title: string;
@@ -89,7 +89,7 @@ export class NotionAssistApi {
         return pageIds;
     }
 
-    @notionApi('page')
+    @NotionAPI('page')
     async getProp(pageId: string, propertyId: string) {
         return await this.client.pages.properties.retrieve({
             page_id: pageId,
@@ -97,7 +97,7 @@ export class NotionAssistApi {
         });
     }
 
-    @notionApi('page')
+    @NotionAPI('page')
     async deletePage(pageId: string) {
         try {
             await this.client.pages.update({
@@ -120,7 +120,7 @@ export class NotionAssistApi {
         }
     }
 
-    @notionApi('database')
+    @NotionAPI('database')
     async updateCalendarProps(
         calendars: {
             name: string;
@@ -142,7 +142,7 @@ export class NotionAssistApi {
         });
     }
 
-    @notionApi('page')
+    @NotionAPI('page')
     async createPage(
         event: calendar_v3.Schema$Event,
         calendar: CalendarEntity,
@@ -189,7 +189,7 @@ export class NotionAssistApi {
         });
     }
 
-    @notionApi('page')
+    @NotionAPI('page')
     public async getUpdatedPages() {
         const props: {
             title: string;
@@ -260,7 +260,7 @@ export class NotionAssistApi {
         return pages;
     }
 
-    @notionApi('page')
+    @NotionAPI('page')
     public async getPages() {
         const props: {
             title: string;
@@ -323,7 +323,7 @@ export class NotionAssistApi {
         return pages;
     }
 
-    @notionApi('page')
+    @NotionAPI('page')
     public async updatePage(
         eventLink: EventEntity,
         event: calendar_v3.Schema$Event,

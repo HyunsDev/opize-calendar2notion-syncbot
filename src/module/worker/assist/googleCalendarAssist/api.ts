@@ -9,7 +9,7 @@ import { google, calendar_v3 } from 'googleapis';
 
 import { SyncError } from '../../error/error';
 
-import { gCalApi } from './api.decorator';
+import { GoogleCalendarAPI } from './api.decorator';
 import { WorkContext } from '../../context/work.context';
 import { EventDate, NotionDateTime } from '../../date/EventDate';
 
@@ -65,7 +65,7 @@ export class GoogleCalendarAssistApi {
         });
     }
 
-    @gCalApi()
+    @GoogleCalendarAPI()
     public async deleteEvent(eventId: string, calendarId: string) {
         try {
             await this.client.events.delete({
@@ -87,7 +87,7 @@ export class GoogleCalendarAssistApi {
         }
     }
 
-    @gCalApi()
+    @GoogleCalendarAPI()
     public async getEventByCalendar(calendarId: string) {
         let nextPageToken: string = undefined;
         const events: calendar_v3.Schema$Event[] = [];
@@ -111,7 +111,7 @@ export class GoogleCalendarAssistApi {
         return events;
     }
 
-    @gCalApi()
+    @GoogleCalendarAPI()
     public async getUpdatedEventsByCalendar(calendar: CalendarEntity) {
         let nextPageToken: string = undefined;
         const events: calendar_v3.Schema$Event[] = [];
@@ -139,7 +139,7 @@ export class GoogleCalendarAssistApi {
         return events;
     }
 
-    @gCalApi()
+    @GoogleCalendarAPI()
     public async moveCalendar(
         eventId: string,
         calendarId: string,
@@ -152,7 +152,7 @@ export class GoogleCalendarAssistApi {
         });
     }
 
-    @gCalApi()
+    @GoogleCalendarAPI()
     public async updateEvent(eventLink: EventEntity, page: PageObjectResponse) {
         const props: {
             title: string;
@@ -209,7 +209,7 @@ export class GoogleCalendarAssistApi {
         }
     }
 
-    @gCalApi()
+    @GoogleCalendarAPI()
     public async createEvent(
         calendar: CalendarEntity,
         page: PageObjectResponse,
