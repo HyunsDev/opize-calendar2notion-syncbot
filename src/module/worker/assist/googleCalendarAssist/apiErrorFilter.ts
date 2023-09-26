@@ -1,9 +1,11 @@
-import { WorkContext } from '../../context/work.context';
-import { GaxiosError } from 'googleapis-common';
-import { GoogleCalendarAPIError } from '../../error/googleCalendar.error';
-import { SyncErrorCode } from '../../error';
-import { DB } from '@/database';
 import dayjs from 'dayjs';
+import { GaxiosError } from 'googleapis-common';
+
+import { DB } from '@/database';
+
+import { WorkContext } from '../../context/work.context';
+import { SyncErrorCode } from '../../error';
+import { GoogleCalendarAPIError } from '../../error/googleCalendar.error';
 
 export async function googleCalendarAPIErrorFilter<T>(
     func: () => Promise<T>,

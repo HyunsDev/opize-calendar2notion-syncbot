@@ -1,4 +1,11 @@
+import { Not } from 'typeorm';
+
 import { DB } from '@/database';
+import { workerLogger } from '@/logger/winston';
+import { TimeoutError, timeout } from '@/utils';
+
+import { context } from '../context';
+
 import {
     EventLinkAssist,
     GoogleCalendarAssist,
@@ -6,17 +13,13 @@ import {
     WorkerAssist,
 } from './assist';
 import { WorkContext } from './context/work.context';
-import { WorkerResult } from './types/result';
-import { Not } from 'typeorm';
+import { SyncTimeoutError } from './error/syncbot.error';
 import {
     isSyncError,
     syncErrorFilter,
     unknownErrorFilter,
 } from './exception/syncException';
-import { workerLogger } from '@/logger/winston';
-import { TimeoutError, timeout } from '@/utils';
-import { SyncTimeoutError } from './error/syncbot.error';
-import { context } from '../context';
+import { WorkerResult } from './types/result';
 
 export class Worker {
     context: WorkContext;

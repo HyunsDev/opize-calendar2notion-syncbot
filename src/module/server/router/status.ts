@@ -6,8 +6,9 @@ import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
 import express from 'express';
 
-import { authGuard } from '../middleware/auth';
 import { context } from '@/module/context';
+
+import { authGuard } from '../middleware/auth';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);

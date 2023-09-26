@@ -1,10 +1,11 @@
 import 'reflect-metadata';
 import 'dotenv/config';
+import { Embed } from '@hyunsdev/discord-webhook';
+
 import { AppDataSource } from './database';
+import { webhook } from './logger/webhook';
 import { Runner } from './module/runner';
 import app from './module/server';
-import { Embed } from '@hyunsdev/discord-webhook';
-import { webhook } from './logger/webhook';
 
 (async () => {
     await AppDataSource.initialize();

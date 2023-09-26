@@ -1,10 +1,12 @@
 import { Client } from '@notionhq/client';
 import { PageObjectResponse } from '@notionhq/client/build/src/api-endpoints';
 
-import { NotionAPI } from './api.decorator';
-import { WorkContext } from '../../context/work.context';
-import { fetchAll } from '@/utils';
 import { NotionEventDto } from '@/module/event';
+import { fetchAll } from '@/utils';
+
+import { WorkContext } from '../../context/work.context';
+
+import { NotionAPI } from './api.decorator';
 import { extraNotionAPIErrorFilterRules } from './apiErrorFilterRule';
 
 export class NotionAssistApi {

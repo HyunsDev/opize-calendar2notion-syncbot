@@ -7,13 +7,14 @@ import {
 import { GaxiosError } from 'gaxios';
 import { google, calendar_v3 } from 'googleapis';
 
+import { GoogleCalendarEventDto } from '@/module/event';
+import { fetchAll } from '@/utils';
+
+import { WorkContext } from '../../context/work.context';
+import { EventDate, NotionDateTime } from '../../date/EventDate';
 import { SyncError } from '../../error/error';
 
 import { GoogleCalendarAPI } from './api.decorator';
-import { WorkContext } from '../../context/work.context';
-import { EventDate, NotionDateTime } from '../../date/EventDate';
-import { fetchAll } from '@/utils';
-import { GoogleCalendarEventDto } from '@/module/event';
 
 export const getGoogleCalendarTokensByUser = (user: UserEntity) => {
     const callbackUrls = JSON.parse(process.env.GOOGLE_CALLBACKS || '{}');

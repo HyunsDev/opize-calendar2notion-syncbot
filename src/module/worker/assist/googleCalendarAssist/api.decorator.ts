@@ -1,7 +1,9 @@
-import { retry, sleep } from '@/utils';
-import { WorkContext } from '../../context/work.context';
-import { googleCalendarAPIErrorFilter } from './apiErrorFilter';
 import { GOOGLE_CALENDAR_API } from '@/constant/googleCalendar.constant';
+import { retry, sleep } from '@/utils';
+
+import { WorkContext } from '../../context/work.context';
+
+import { googleCalendarAPIErrorFilter } from './apiErrorFilter';
 
 export function GoogleCalendarAPI() {
     return function (target: any, key: string, desc: PropertyDescriptor) {

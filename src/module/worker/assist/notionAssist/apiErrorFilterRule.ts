@@ -1,7 +1,8 @@
 import { APIResponseError } from '@notionhq/client';
+
 import { WorkContext } from '../../context/work.context';
-import { NotionAPIError } from '../../error/notion.error';
 import { SyncErrorCode } from '../../error';
+import { NotionAPIError } from '../../error/notion.error';
 
 export type NotionAPIErrorFilterRule = {
     name: string;

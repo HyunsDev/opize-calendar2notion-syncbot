@@ -1,11 +1,14 @@
 import { UserEntity, UserPlan } from '@opize/calendar2notion-object';
-import { context } from '../context';
-import { RunnerService, runnerService } from './runner.service';
-import { sleep } from '@/utils';
-import { Worker } from '../worker';
-import { runnerLogger } from '@/logger/winston';
 import axios from 'axios';
+
+import { runnerLogger } from '@/logger/winston';
+import { sleep } from '@/utils';
+
+import { context } from '../context';
+import { Worker } from '../worker';
 import { WorkerResult } from '../worker/types/result';
+
+import { RunnerService, runnerService } from './runner.service';
 
 export abstract class Loop {
     loopId: string;
