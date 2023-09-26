@@ -1,6 +1,6 @@
-import { retry } from './retry';
+import { timeout } from './timeout';
 
-export function Retry(maxRetries: number = 3, delay: number = 300) {
+export function Timeout(ms: number) {
     return function (
         target: any,
         propertyKey: string,
@@ -8,11 +8,7 @@ export function Retry(maxRetries: number = 3, delay: number = 300) {
     ) {
         const originalMethod = descriptor.value;
         descriptor.value = async function (...args: any[]) {
-            return await retry(
-                originalMethod.bind(this, args),
-                maxRetries,
-                delay,
-            );
+            return await timeout(originalMethod.bind(this, args), ms);
         };
     };
 }
