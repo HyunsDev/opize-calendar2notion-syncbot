@@ -14,9 +14,6 @@ export interface EventConstructorProps extends ProtoEventConstructorProps {
     googleCalendarEventLink?: string;
 }
 
-/**
- * Calendar2notion에서 캘린더 간 이벤트를 전달하기 위한 DTO
- */
 export class EventDto extends ProtoEvent {
     // data
     title: string;

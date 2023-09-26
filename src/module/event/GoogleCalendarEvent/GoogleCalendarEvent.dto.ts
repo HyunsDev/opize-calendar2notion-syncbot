@@ -19,9 +19,6 @@ export interface GoogleCalendarEventConstructorProps
     googleCalendarEventLink?: string;
 }
 
-/**
- * Google Calendar의 이벤트와 Event를 사이를 연결하기 위한 DTO
- */
 export class GoogleCalendarEventDto extends ProtoEvent {
     summary: string;
     status: 'confirmed' | 'tentative' | 'cancelled';
@@ -39,9 +36,6 @@ export class GoogleCalendarEventDto extends ProtoEvent {
         this.date = data.date;
     }
 
-    /**
-     * `Event`를 받아 `GoogleCalendarEvent`로 변환합니다.
-     */
     static fromEvent(event: EventDto): GoogleCalendarEventDto {
         const googleCalendarEvent = new GoogleCalendarEventDto({
             eventSource: 'event',
@@ -65,9 +59,6 @@ export class GoogleCalendarEventDto extends ProtoEvent {
         return googleCalendarEvent;
     }
 
-    /**
-     * `calendar_v3.Schema$Event`를 받아 `GoogleCalendarEvent`로 변환합니다.
-     */
     static fromGoogleCalendar(
         originalEvent: calendar_v3.Schema$Event,
         calendar: CalendarEntity,
@@ -97,9 +88,6 @@ export class GoogleCalendarEventDto extends ProtoEvent {
         return googleCalendarEvent;
     }
 
-    /**
-     * `GoogleCalendarEvent`를 `Event`로 변환합니다.
-     */
     toEvent() {
         const event = new EventDto({
             eventSource: this.eventSource,
