@@ -20,7 +20,7 @@ export abstract class ProtoEvent {
 
     eventId?: number;
     googleCalendarEventId?: string;
-    notionEventId?: string;
+    notionPageId?: string;
     calendar: CalendarEntity;
 
     readonly originalNotionEvent?: PageObjectResponse;
@@ -32,7 +32,7 @@ export abstract class ProtoEvent {
         this.eventId = data.eventId;
         this.googleCalendarEventId = data.googleCalendarEventId;
         this.calendar = data.calendar;
-        this.notionEventId = data.notionEventId;
+        this.notionPageId = data.notionEventId;
 
         this.originalNotionEvent = data.originalNotionEvent;
         this.originalGoogleCalendarEvent = data.originalGoogleCalendarEvent;

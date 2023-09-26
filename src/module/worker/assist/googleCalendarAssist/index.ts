@@ -1,17 +1,12 @@
-import { PageObjectResponse } from '@notionhq/client/build/src/api-endpoints';
 import { CalendarEntity } from '@opize/calendar2notion-object';
-import dayjs from 'dayjs';
-import timezone from 'dayjs/plugin/timezone';
-import utc from 'dayjs/plugin/utc';
-import { calendar_v3 } from 'googleapis';
+
+import { GoogleCalendarEventDto, NotionEventDto } from '@/module/event';
 
 import { WorkContext } from '../../context/work.context';
 import { Assist } from '../../types/assist';
 import { EventLinkAssist } from '../eventLinkAssist';
 
 import { GoogleCalendarAssistApi } from './api';
-dayjs.extend(utc);
-dayjs.extend(timezone);
 
 export class GoogleCalendarAssist extends Assist {
     private context: WorkContext;
@@ -44,96 +39,39 @@ export class GoogleCalendarAssist extends Assist {
     }
 
     public async getEventByCalendar(calendar: CalendarEntity) {
-        return await this.api.getEventsByCalendar(calendar);
+        return (await this.api.getEventsByCalendar(calendar)).map((event) =>
+            event.toEvent(),
+        );
     }
 
     public async getUpdatedEvents() {
-        const connectedCalendars = this.context.calendars.filter(
-            (e) => e.status === 'CONNECTED',
-        );
-
-        const res: {
-            calendar: CalendarEntity;
-            events: calendar_v3.Schema$Event[];
-        }[] = [];
-
-        for (const calendar of connectedCalendars) {
-            res.push({
-                calendar,
-                events: await this.api.getUpdatedEventsByCalendar(calendar),
-            });
+        const res: GoogleCalendarEventDto[] = [];
+        for (const calendar of this.context.connectedCalendars) {
+            const res = await this.api.getUpdatedEventsByCalendar(calendar);
+            res.push(...res);
         }
 
-        this.context.result.syncEvents.gCalCalendarCount = res.length;
-        this.context.result.syncEvents.gCal2NotionCount = res.reduce(
-            (pre, cur) => pre + cur.events?.length || 0,
-            0,
-        );
+        this.context.result.syncEvents.gCalCalendarCount =
+            this.context.connectedCalendars.length;
+        this.context.result.syncEvents.gCal2NotionCount = res.length;
         return res;
     }
 
-    public async CUDEvent(page: PageObjectResponse) {
-        const props: {
-            title: string;
-            calendar: string;
-            date: string;
-            delete: string;
-            link?: string;
-        } = JSON.parse(this.context.user.notionProps);
+    public async CUDEvent(notionEvent: NotionEventDto) {
+        const event = notionEvent.toEvent();
+
         const eventLink = await this.eventLinkAssist.findByNotionPageId(
-            page.id,
+            event.notionPageId,
         );
 
-        const notionCalendarId = (
-            Object.values(page.properties).find(
-                (e) => e.id === props.calendar,
-            ) as any
-        ).select.id;
-        const calendar = this.context.calendars.find(
-            (e) => e.notionPropertyId === notionCalendarId,
-        );
-
-        if (!calendar) {
-            // 캘린더가 없는 경우 처리하지 않음
-            return;
-        }
-
-        if (calendar.accessRole === 'reader') {
-            // 캘린더가 읽기 전용인 경우 처리하지 않음
-            return;
-        }
+        // 캘린더가 없거나 읽기 전용일 경우 무시
+        if (!event.calendar || event.calendar.accessRole === 'reader') return;
 
         if (eventLink && eventLink.googleCalendarEventId) {
-            const notionEventUpdated = new Date(page.last_edited_time);
-            const userUpdated = dayjs(this.context.user.lastCalendarSync)
-                .tz('Asia/Seoul')
-                .add(-1, 'minute')
-                .toDate();
-            // const eventLinkUpdated = new Date(eventLink.lastNotionUpdate);
-
-            // 이미 업데이트 된 일정
-            if (notionEventUpdated < userUpdated) return;
-            // if (notionEventUpdated <= eventLinkUpdated) return;
-
-            // 캘린더 이동
-            if (
-                eventLink.googleCalendarCalendarId !== calendar.googleCalendarId
-            ) {
-                await this.api.moveEventCalendar(
-                    eventLink.googleCalendarEventId,
-                    eventLink.googleCalendarCalendarId,
-                    calendar,
-                );
-                await this.eventLinkAssist.updateCalendar(eventLink, calendar);
-            }
-
-            // 이벤트 수정
-            await this.api.updateEvent(eventLink, page);
-            await this.eventLinkAssist.updateLastGCalUpdate(eventLink);
-            return;
-        } else {
-            const event = await this.api.createEvent(calendar, page);
-            await this.eventLinkAssist.create(page, event, calendar);
+            const newEvent = await this.api.createEvent(
+                GoogleCalendarEventDto.fromEvent(event),
+            );
+            await this.eventLinkAssist.create(event.merge(newEvent.toEvent()));
             return;
         }
     }

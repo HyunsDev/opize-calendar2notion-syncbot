@@ -1,9 +1,4 @@
-import { PageObjectResponse } from '@notionhq/client/build/src/api-endpoints';
-import {
-    CalendarEntity,
-    EventEntity,
-    UserEntity,
-} from '@opize/calendar2notion-object';
+import { CalendarEntity, UserEntity } from '@opize/calendar2notion-object';
 import { GaxiosError } from 'gaxios';
 import { google, calendar_v3 } from 'googleapis';
 
@@ -11,7 +6,6 @@ import { GoogleCalendarEventDto } from '@/module/event';
 import { fetchAll } from '@/utils';
 
 import { WorkContext } from '../../context/work.context';
-import { EventDate, NotionDateTime } from '../../date/EventDate';
 import { SyncError } from '../../error/error';
 
 import { GoogleCalendarAPI } from './api.decorator';
@@ -236,7 +230,7 @@ export class GoogleCalendarAssistApi {
                 // Cron과의 연결을 위한 extendedProperties
                 extendedProperties: {
                     shared: {
-                        [`n.attchwsid.${event.notionEventId}`]:
+                        [`n.attchwsid.${event.notionPageId}`]:
                             'bdcd90fd-4c12-4832-9caf-4fb21fc6c524',
                         [`n.attchwsid.878025b813f54f1996ac4e985d3cd422`]:
                             'bdcd90fd-4c12-4832-9caf-4fb21fc6c524',
@@ -245,7 +239,7 @@ export class GoogleCalendarAssistApi {
                 // Google Calendar에 Notion Event를 첨부하기 위한 attachments
                 attachments: [
                     {
-                        fileUrl: `https://www.notion.so/${event.notionEventId}`,
+                        fileUrl: `https://www.notion.so/${event.notionPageId}`,
                         title: event.summary,
                         iconLink:
                             'https://lh3.googleusercontent.com/pw/AJFCJaU8wzEWMXWYp2glnlt4vX9rdN3h4KJGpgu6zshkAEPSohFfttbcfQh_TJf1LqOwuoWvBQaVZaShLmbFfIUaZlu-kAkaeLkQSKTrMHUoIDviYIbizCzOIOwp-g2Wl6amU0LuYxkqO9kLcOe-L4o_qEg=w32-h32-s-no?authuser=0',
@@ -272,7 +266,7 @@ export class GoogleCalendarAssistApi {
             shared: {
                 ...existEvent.originalGoogleCalendarEvent.extendedProperties
                     ?.shared,
-                [`n.attchwsid.${event.notionEventId}`]:
+                [`n.attchwsid.${event.notionPageId}`]:
                     'bdcd90fd-4c12-4832-9caf-4fb21fc6c524',
                 [`n.attchwsid.878025b813f54f1996ac4e985d3cd422`]:
                     'bdcd90fd-4c12-4832-9caf-4fb21fc6c524',
@@ -287,16 +281,16 @@ export class GoogleCalendarAssistApi {
             existEvent.originalGoogleCalendarEvent.attachments?.filter(
                 (attachment) =>
                     attachment.fileUrl !==
-                    `https://www.notion.so/${event.notionEventId}`,
+                    `https://www.notion.so/${event.notionPageId}`,
             );
 
         const notionAttachment =
             existEvent.originalGoogleCalendarEvent.attachments?.find(
                 (attachment) =>
                     attachment.fileUrl ===
-                    `https://www.notion.so/${event.notionEventId}`,
+                    `https://www.notion.so/${event.notionPageId}`,
             ) || {
-                fileUrl: `https://www.notion.so/${event.notionEventId}`,
+                fileUrl: `https://www.notion.so/${event.notionPageId}`,
                 title: event.summary,
                 iconLink:
                     'https://lh3.googleusercontent.com/pw/AJFCJaU8wzEWMXWYp2glnlt4vX9rdN3h4KJGpgu6zshkAEPSohFfttbcfQh_TJf1LqOwuoWvBQaVZaShLmbFfIUaZlu-kAkaeLkQSKTrMHUoIDviYIbizCzOIOwp-g2Wl6amU0LuYxkqO9kLcOe-L4o_qEg=w32-h32-s-no?authuser=0',

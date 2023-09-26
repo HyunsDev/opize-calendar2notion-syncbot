@@ -211,15 +211,14 @@ export class NotionAssistApi {
     @NotionAPI('database')
     async getUpdatedPages() {
         const props = this.context.user.parsedNotionProps;
-        const writeAbleCalendarOptions = this.context.calendars
-            .filter((c) => c.status === 'CONNECTED')
-            .filter((c) => c.accessRole !== 'reader')
-            .map((c) => ({
+        const writeAbleCalendarOptions = this.context.writeableCalendars.map(
+            (c) => ({
                 property: props.calendar,
                 select: {
                     equals: c.googleCalendarName,
                 },
-            }));
+            }),
+        );
 
         const result = await fetchAll(async (nextCursor) => {
             const res = await this.client.databases.query({
@@ -327,7 +326,7 @@ export class NotionAssistApi {
     async updatePage(event: NotionEventDto) {
         const props = this.context.user.parsedNotionProps;
         const res = await this.client.pages.update({
-            page_id: event.notionEventId,
+            page_id: event.notionPageId,
             properties: {
                 title: {
                     type: 'title',

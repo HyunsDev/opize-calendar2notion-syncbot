@@ -2,7 +2,7 @@ import { GetDatabaseResponse } from '@notionhq/client/build/src/api-endpoints';
 import { CalendarEntity } from '@opize/calendar2notion-object';
 
 import { DB } from '@/database';
-import { EventDto, NotionEventDto } from '@/module/event';
+import { GoogleCalendarEventDto, NotionEventDto } from '@/module/event';
 
 import { WorkContext } from '../../context/work.context';
 import { SyncErrorCode } from '../../error';
@@ -79,8 +79,10 @@ export class NotionAssist extends Assist {
         await this.api.deletePage(pageId);
     }
 
-    public async addPage(event: EventDto) {
-        const page = await this.api.createPage(NotionEventDto.fromEvent(event));
+    public async addPage(googleCalendarEvent: GoogleCalendarEventDto) {
+        const page = await this.api.createPage(
+            NotionEventDto.fromEvent(googleCalendarEvent.toEvent()),
+        );
         return page;
     }
 
@@ -95,7 +97,9 @@ export class NotionAssist extends Assist {
         return pages;
     }
 
-    public async CUDPage(event: EventDto) {
+    public async CUDPage(googleCalendarEvent: GoogleCalendarEventDto) {
+        const event = googleCalendarEvent.toEvent();
+
         const eventLink = await this.eventLinkAssist.findByGCalEvent(
             event.googleCalendarEventId,
             event.calendar.googleCalendarId,
@@ -103,7 +107,7 @@ export class NotionAssist extends Assist {
 
         if (eventLink && eventLink.notionPageId) {
             if (event.status === 'cancelled') {
-                await this.deletePage(event.notionEventId);
+                await this.deletePage(event.notionPageId);
                 return;
             }
 

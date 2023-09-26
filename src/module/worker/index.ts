@@ -109,7 +109,8 @@ export class Worker {
     private async init() {
         this.context.startedAt = new Date();
         this.context.user = await this.getTargetUser();
-        this.context.setCalendars(await this.getUserCalendar());
+        const calendars = await this.getUserCalendar();
+        this.context.setCalendars(calendars);
         this.context.config = this.context.getInitConfig();
 
         this.eventLinkAssist = new EventLinkAssist({
@@ -164,10 +165,8 @@ export class Worker {
         const updatedGCalEvents =
             await this.googleCalendarAssist.getUpdatedEvents();
 
-        for (const { calendar, events } of updatedGCalEvents) {
-            for (const event of events) {
-                await this.notionAssist.CUDPage(event, calendar);
-            }
+        for (const event of updatedGCalEvents) {
+            await this.notionAssist.CUDPage(event);
         }
 
         for (const page of updatedPages) {
@@ -191,8 +190,6 @@ export class Worker {
     // 계정 초기 세팅
     private async initAccount() {
         this.context.result.step = 'initAccount';
-
-        const pages = await this.notionAssist.getPages();
 
         const newCalendars = this.context.calendars.filter(
             (e) => e.status === 'PENDING',

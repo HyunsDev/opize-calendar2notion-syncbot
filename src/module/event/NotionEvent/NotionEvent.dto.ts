@@ -62,7 +62,7 @@ export class NotionEventDto extends ProtoEvent {
             eventId: event.eventId,
             googleCalendarEventId: event.googleCalendarEventId,
             calendar: event.calendar,
-            notionEventId: event.notionEventId,
+            notionEventId: event.notionPageId,
 
             title: event.title,
             isDeleted: event.status === 'confirmed',
@@ -121,7 +121,7 @@ export class NotionEventDto extends ProtoEvent {
 
             eventId: this.eventId,
             googleCalendarEventId: this.googleCalendarEventId,
-            notionEventId: this.notionEventId,
+            notionEventId: this.notionPageId,
             calendar: this.calendar,
 
             title: this.title,

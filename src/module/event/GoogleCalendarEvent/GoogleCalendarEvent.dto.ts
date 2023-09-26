@@ -41,7 +41,7 @@ export class GoogleCalendarEventDto extends ProtoEvent {
             eventSource: 'event',
 
             eventId: event.eventId,
-            notionEventId: event.notionEventId,
+            notionEventId: event.notionPageId,
             googleCalendarEventId: event.googleCalendarEventId,
             calendar: event.calendar,
 
@@ -92,7 +92,7 @@ export class GoogleCalendarEventDto extends ProtoEvent {
             eventSource: this.eventSource,
 
             eventId: this.eventId,
-            notionEventId: this.notionEventId,
+            notionEventId: this.notionPageId,
             googleCalendarEventId: this.googleCalendarEventId,
             calendar: this.calendar,
 

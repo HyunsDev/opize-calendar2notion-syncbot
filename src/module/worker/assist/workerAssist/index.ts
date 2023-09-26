@@ -1,9 +1,9 @@
 import { CalendarEntity, EventEntity } from '@opize/calendar2notion-object';
 import dayjs from 'dayjs';
-import { calendar_v3 } from 'googleapis';
 import { LessThan } from 'typeorm';
 
 import { DB } from '@/database';
+import { GoogleCalendarEventDto } from '@/module/event';
 
 import { NotionAssist, EventLinkAssist, GoogleCalendarAssist } from '..';
 import { WorkContext } from '../../context/work.context';
@@ -41,13 +41,12 @@ export class WorkerAssist extends Assist {
     }
 
     public async eraseDeletedNotionPage() {
-        const notionDeletedPageIds =
-            await this.notionAssist.getDeletedPageIds();
-        for (const pageId of notionDeletedPageIds) {
-            await this.eraseNotionPage(pageId);
+        const notionDeletedPages = await this.notionAssist.getDeletedPages();
+        for (const page of notionDeletedPages) {
+            await this.eraseNotionPage(page.notionPageId);
         }
         this.context.result.eraseDeletedEvent.notion =
-            notionDeletedPageIds.length;
+            notionDeletedPages.length;
     }
 
     public async eraseDeletedEventLink() {
@@ -80,12 +79,9 @@ export class WorkerAssist extends Assist {
         await this.eventLinkAssist.deleteEventLink(eventLink);
     }
 
-    public async addEventByGCal(
-        event: calendar_v3.Schema$Event,
-        calendar: CalendarEntity,
-    ) {
-        const page = await this.notionAssist.addPage(event, calendar);
-        await this.eventLinkAssist.create(page, event, calendar);
+    public async addEventByGCal(event: GoogleCalendarEventDto) {
+        const page = await this.notionAssist.addPage(event);
+        await this.eventLinkAssist.create(event.toEvent());
         return page;
     }
 
@@ -128,9 +124,8 @@ export class WorkerAssist extends Assist {
         });
 
         await this.notionAssist.addCalendarProp(newCalendar);
-        const events = await this.googleCalendarAssist.getEventByCalendar(
-            newCalendar.googleCalendarId,
-        );
+        const events =
+            await this.googleCalendarAssist.getEventByCalendar(newCalendar);
 
         const calendar = await DB.calendar.findOne({
             where: {
@@ -138,7 +133,7 @@ export class WorkerAssist extends Assist {
             },
         });
         for (const event of events) {
-            await this.addEventByGCal(event, calendar);
+            await this.addEventByGCal(GoogleCalendarEventDto.fromEvent(event));
         }
 
         this.context.result.syncNewCalendar[`${calendar.id}`].eventCount =

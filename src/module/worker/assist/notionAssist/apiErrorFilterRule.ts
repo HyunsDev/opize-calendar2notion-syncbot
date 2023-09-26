@@ -9,7 +9,6 @@ export type NotionAPIErrorFilterRule = {
     condition: (
         response: APIResponseError,
         target: 'page' | 'database',
-        error: Error,
     ) => boolean;
     callback?: (err: any, context: WorkContext, args: any[]) => Promise<any>;
 };
@@ -17,7 +16,7 @@ export type NotionAPIErrorFilterRule = {
 export const baseNotionAPIErrorFilterRules: NotionAPIErrorFilterRule[] = [
     {
         name: 'INVALID_REQUEST',
-        condition: (response) => response.status === 400,
+        condition: (err) => err.status === 400,
         callback: (err, context, args) => {
             throw new NotionAPIError({
                 code: SyncErrorCode.notion.api.INVALID_REQUEST,
@@ -29,7 +28,7 @@ export const baseNotionAPIErrorFilterRules: NotionAPIErrorFilterRule[] = [
     },
     {
         name: 'UNAUTHORIZED',
-        condition: (response) => response.status === 401,
+        condition: (err) => err.status === 401,
         callback: (err, context, args) => {
             throw new NotionAPIError({
                 code: SyncErrorCode.notion.api.UNAUTHORIZED,
@@ -41,8 +40,7 @@ export const baseNotionAPIErrorFilterRules: NotionAPIErrorFilterRule[] = [
     },
     {
         name: 'DATABASE_NOT_FOUND',
-        condition: (response, target) =>
-            response.status === 404 && target === 'database',
+        condition: (err, target) => err.status === 404 && target === 'database',
         callback: (err, context, args) => {
             throw new NotionAPIError({
                 code: SyncErrorCode.notion.api.DATABASE_NOT_FOUND,
@@ -54,8 +52,7 @@ export const baseNotionAPIErrorFilterRules: NotionAPIErrorFilterRule[] = [
     },
     {
         name: 'PAGE_NOT_FOUND',
-        condition: (response, target) =>
-            response.status === 404 && target === 'page',
+        condition: (err, target) => err.status === 404 && target === 'page',
         callback: (err, context, args) => {
             throw new NotionAPIError({
                 code: SyncErrorCode.notion.api.PAGE_NOT_FOUND,
@@ -67,7 +64,7 @@ export const baseNotionAPIErrorFilterRules: NotionAPIErrorFilterRule[] = [
     },
     {
         name: 'RATE_LIMIT',
-        condition: (response) => response.status === 429,
+        condition: (err) => err.status === 429,
         callback: (err, context, args) => {
             throw new NotionAPIError({
                 code: SyncErrorCode.notion.api.RATE_LIMIT,
@@ -79,7 +76,7 @@ export const baseNotionAPIErrorFilterRules: NotionAPIErrorFilterRule[] = [
     },
     {
         name: 'INTERNAL_SERVER_ERROR',
-        condition: (response) => response.status === 500,
+        condition: (err) => err.status === 500,
         callback: (err, context, args) => {
             throw new NotionAPIError({
                 code: SyncErrorCode.notion.api.INTERNAL_SERVER_ERROR,
@@ -91,7 +88,7 @@ export const baseNotionAPIErrorFilterRules: NotionAPIErrorFilterRule[] = [
     },
     {
         name: 'SERVICE_UNAVAILABLE',
-        condition: (response) => response.status === 503,
+        condition: (err) => err.status === 503,
         callback: (err, context, args) => {
             throw new NotionAPIError({
                 code: SyncErrorCode.notion.api.SERVICE_UNAVAILABLE,
@@ -124,12 +121,12 @@ export const extraNotionAPIErrorFilterRules: Record<
 > = {
     IGNORE_ALREADY_ARCHIVED_PAGE: {
         name: 'IGNORE_ALREADY_ARCHIVED_PAGE',
-        condition: (response, target, err) =>
+        condition: (err) =>
             err.message ===
             `Can't update a page that is archived. You must unarchive the page before updating.`,
     },
     IGNORE_NOT_FOUND: {
         name: 'IGNORE_NOT_FOUND',
-        condition: (response) => response.status === 404,
+        condition: (err) => err.status === 404,
     },
 };

@@ -77,7 +77,7 @@ export class EventLinkAssist {
             lastNotionUpdate: new Date(),
             status: 'SYNCED',
             willRemove: false,
-            notionPageId: event.notionEventId,
+            notionPageId: event.notionPageId,
             calendar: event.calendar,
             user: this.context.user,
         });

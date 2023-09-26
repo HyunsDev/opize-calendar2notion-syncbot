@@ -27,7 +27,7 @@ export async function notionAPIErrorFilter<T>(
         ];
 
         const filterRule = filterRules.find((rule) =>
-            rule.condition(err.response, target, err),
+            rule.condition(err, target),
         );
 
         if (filterRule) {

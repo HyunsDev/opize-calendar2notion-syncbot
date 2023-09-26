@@ -1,153 +1,41 @@
-import dayjs from 'dayjs';
 import { GaxiosError } from 'googleapis-common';
 
-import { DB } from '@/database';
-
 import { WorkContext } from '../../context/work.context';
-import { SyncErrorCode } from '../../error';
-import { GoogleCalendarAPIError } from '../../error/googleCalendar.error';
 
+import {
+    GoogleCalendarErrorFilterRule,
+    baseGoogleCalendarAPIErrorFilterRules,
+} from './apiErrorFilterRules';
+
+/**
+ * 구글 API 요청에서 발생한 에러를 필터링합니다.
+ */
 export async function googleCalendarAPIErrorFilter<T>(
     func: () => Promise<T>,
     context: WorkContext,
     args: any[],
-) {
+    /**
+     * 추가적으로 적용할 에러 필터 규칙입니다. 기본 규칙에 비해 높은 우선순위를 가집니다.
+     */
+    extraFilterRules: GoogleCalendarErrorFilterRule[] = [],
+): Promise<T> {
     try {
         return await func();
     } catch (err) {
-        if (!(err instanceof GaxiosError)) {
-            throw err;
-        }
+        if (err instanceof GaxiosError) {
+            const filterRules: GoogleCalendarErrorFilterRule[] = [
+                ...extraFilterRules,
+                ...baseGoogleCalendarAPIErrorFilterRules,
+            ];
 
-        if (!err.response) {
-            throw new GoogleCalendarAPIError({
-                code: SyncErrorCode.googleCalendar.api.UNKNOWN_ERROR,
-                user: context.user,
-                err,
-                args,
-            });
-        }
+            const filterRule = filterRules.find((rule) =>
+                rule.condition(err.response),
+            );
 
-        const { status, data } = err.response;
-        if (status === 400) {
-            throw new GoogleCalendarAPIError({
-                code: SyncErrorCode.googleCalendar.api.INVALID_REQUEST,
-                user: context.user,
-                err,
-                args,
-            });
-        }
-
-        if (status === 401) {
-            throw new GoogleCalendarAPIError({
-                code: SyncErrorCode.googleCalendar.api.INVALID_CREDENTIALS,
-                user: context.user,
-                err,
-                args,
-            });
-        }
-
-        if (status === 403) {
-            if (
-                ['User Rate Limit Exceeded', 'Rate Limit Exceeded'].includes(
-                    data.message,
-                )
-            ) {
-                throw new GoogleCalendarAPIError({
-                    code: SyncErrorCode.googleCalendar.api.RATE_LIMIT,
-                    user: context.user,
-                    err,
-                    args,
-                });
+            if (filterRule) {
+                await filterRule.callback(err, context, args);
             }
-
-            if (
-                [
-                    'Calendar usage limits exceeded.',
-                    'Calendar usage limits exceeded',
-                ].includes(data.message)
-            ) {
-                throw new GoogleCalendarAPIError({
-                    code: SyncErrorCode.googleCalendar.api.FORBIDDEN,
-                    user: context.user,
-                    err,
-                    args,
-                });
-            }
-
-            throw new GoogleCalendarAPIError({
-                code: SyncErrorCode.googleCalendar.api
-                    .USER_CALENDAR_USAGE_LIMIT,
-                user: context.user,
-                err,
-                args,
-            });
+        } else {
         }
-
-        if (status === 404) {
-            throw new GoogleCalendarAPIError({
-                code: SyncErrorCode.googleCalendar.api.NOT_FOUND,
-                user: context.user,
-                err,
-                args,
-            });
-        }
-
-        if (status === 410) {
-            if (data.message === 'deleted') {
-                return;
-            }
-
-            if (data.error.errors[0].reason === 'updatedMinTooLongAgo') {
-                await DB.user.update(
-                    {
-                        id: context.user.id,
-                    },
-                    {
-                        lastCalendarSync: dayjs().add(-10, 'days').toDate(),
-                    },
-                );
-
-                throw new GoogleCalendarAPIError({
-                    code: SyncErrorCode.googleCalendar.api
-                        .GONE_UPDATED_MIN_TOO_LONG_AGO,
-                    user: context.user,
-                    err,
-                    args,
-                });
-            }
-
-            throw new GoogleCalendarAPIError({
-                code: SyncErrorCode.googleCalendar.api.GONE,
-                user: context.user,
-                err,
-                args,
-            });
-        }
-
-        if (status === 429) {
-            throw new GoogleCalendarAPIError({
-                code: SyncErrorCode.googleCalendar.api.RATE_LIMIT,
-                user: context.user,
-                err,
-                args,
-            });
-        }
-
-        if (status === 500) {
-            throw new GoogleCalendarAPIError({
-                code: SyncErrorCode.googleCalendar.api.INTERNAL_SERVER_ERROR,
-                user: context.user,
-                err,
-                args,
-            });
-        }
-
-        throw new GoogleCalendarAPIError({
-            code: SyncErrorCode.googleCalendar.api.UNKNOWN_ERROR,
-            user: context.user,
-            err,
-            args,
-        });
     }
 }
