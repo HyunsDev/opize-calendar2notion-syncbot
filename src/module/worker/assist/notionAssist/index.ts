@@ -1,18 +1,19 @@
+import { GetDatabaseResponse } from '@notionhq/client/build/src/api-endpoints';
 import { CalendarEntity } from '@opize/calendar2notion-object';
 import dayjs from 'dayjs';
 import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
-import { calendar_v3, google } from 'googleapis';
+import { calendar_v3 } from 'googleapis';
 
+import { DB } from '@/database';
+
+import { WorkContext } from '../../context/work.context';
 import { SyncErrorCode } from '../../error';
 import { NotionSyncError } from '../../error/notion.error';
 import { Assist } from '../../types/assist';
 import { EventLinkAssist } from '../eventLinkAssist';
 
 import { NotionAssistApi } from './api';
-import { WorkContext } from '../../context/work.context';
-import { DB } from '@/database';
-import { GetDatabaseResponse } from '@notionhq/client/build/src/api-endpoints';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -45,8 +46,8 @@ export class NotionAssist extends Assist {
         this.checkProps(database);
     }
 
-    public async getDeletedPageIds() {
-        return await this.api.getDeletedPageIds();
+    public async getDeletedPages() {
+        return await this.api.getDeletedPages();
     }
 
     public async addCalendarProp(calendar: CalendarEntity) {

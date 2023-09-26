@@ -2,8 +2,12 @@ import { retry, sleep } from '@/utils';
 import { WorkContext } from '../../context/work.context';
 import { notionAPIErrorFilter } from './apiErrorFilter';
 import { NOTION_API } from '@/constant/notion.constant';
+import { NotionAPIErrorFilterRule } from './apiErrorFilterRule';
 
-export function NotionAPI(targetObject: 'database' | 'page') {
+export function NotionAPI(
+    targetObject: 'database' | 'page',
+    extraFilterRules?: NotionAPIErrorFilterRule[],
+) {
     return function (target: any, key: string, desc: PropertyDescriptor) {
         const method = desc.value;
         desc.value = async function (...args: any) {
@@ -15,6 +19,7 @@ export function NotionAPI(targetObject: 'database' | 'page') {
                         targetObject,
                         context,
                         args,
+                        extraFilterRules,
                     ),
                 NOTION_API.MAX_RETRY,
                 NOTION_API.RETRY_DELAY,

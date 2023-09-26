@@ -19,6 +19,8 @@ export class WorkContext {
 
     user: UserEntity;
     calendars: CalendarEntity[];
+    connectedCalendars: CalendarEntity[];
+    writeableCalendars: CalendarEntity[];
 
     constructor(workerId: string, userId: number, startedAt: Date) {
         this.workerId = workerId;
@@ -40,6 +42,16 @@ export class WorkContext {
             syncNewCalendar: {},
             simpleResponse: '',
         };
+    }
+
+    setCalendars(calendars: CalendarEntity[]) {
+        this.calendars = calendars;
+        this.connectedCalendars = calendars.filter(
+            (e) => e.status === 'CONNECTED',
+        );
+        this.writeableCalendars = calendars
+            .filter((e) => e.status === 'CONNECTED')
+            .filter((e) => e.accessRole !== 'reader');
     }
 
     getInitConfig() {

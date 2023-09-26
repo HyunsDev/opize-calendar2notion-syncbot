@@ -106,7 +106,7 @@ export class Worker {
     private async init() {
         this.context.startedAt = new Date();
         this.context.user = await this.getTargetUser();
-        this.context.calendars = await this.getUserCalendar();
+        this.context.setCalendars(await this.getUserCalendar());
         this.context.config = this.context.getInitConfig();
 
         this.eventLinkAssist = new EventLinkAssist({

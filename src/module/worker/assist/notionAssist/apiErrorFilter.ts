@@ -1,71 +1,35 @@
+import { APIResponseError } from '@notionhq/client';
 import { WorkContext } from '../../context/work.context';
-import { SyncErrorCode } from '../../error';
-import { NotionAPIError } from '../../error/notion.error';
+import {
+    NotionAPIErrorFilterRule,
+    baseNotionAPIErrorFilterRules,
+} from './apiErrorFilterRule';
 
 export async function notionAPIErrorFilter<T>(
     func: () => Promise<T>,
     target: 'database' | 'page',
     context: WorkContext,
     args: any[],
-) {
+    extraFilterRules: NotionAPIErrorFilterRule[] = [],
+): Promise<T> {
     try {
         return await func();
     } catch (err) {
-        const { status } = err;
-        const payload = {
-            user: context.user,
-            err,
-            args,
-        };
-
-        if (status === 400) {
-            throw new NotionAPIError({
-                code: SyncErrorCode.notion.api.INVALID_REQUEST,
-                ...payload,
-            });
+        if (!(err instanceof APIResponseError)) {
+            throw err;
         }
 
-        if (status === 401) {
-            throw new NotionAPIError({
-                code: SyncErrorCode.notion.api.UNAUTHORIZED,
-                ...payload,
-            });
-        }
+        const filterRules: NotionAPIErrorFilterRule[] = [
+            ...extraFilterRules,
+            ...baseNotionAPIErrorFilterRules,
+        ];
 
-        if (status === 404) {
-            throw new NotionAPIError({
-                code:
-                    target === 'database'
-                        ? SyncErrorCode.notion.api.DATABASE_NOT_FOUND
-                        : SyncErrorCode.notion.api.PAGE_NOT_FOUND,
-                ...payload,
-            });
-        }
+        const filterRule = filterRules.find((rule) =>
+            rule.condition(err.response, target, err),
+        );
 
-        if (status === 429) {
-            throw new NotionAPIError({
-                code: SyncErrorCode.notion.api.RATE_LIMIT,
-                ...payload,
-            });
+        if (filterRule) {
+            await filterRule?.callback(err, context, args);
         }
-
-        if (status === 500) {
-            throw new NotionAPIError({
-                code: SyncErrorCode.notion.api.INTERNAL_SERVER_ERROR,
-                ...payload,
-            });
-        }
-
-        if (status === 503) {
-            throw new NotionAPIError({
-                code: SyncErrorCode.notion.api.SERVICE_UNAVAILABLE,
-                ...payload,
-            });
-        }
-
-        throw new NotionAPIError({
-            code: SyncErrorCode.notion.api.UNKNOWN_ERROR,
-            ...payload,
-        });
     }
 }

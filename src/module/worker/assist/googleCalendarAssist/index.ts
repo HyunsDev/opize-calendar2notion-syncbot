@@ -43,8 +43,8 @@ export class GoogleCalendarAssist extends Assist {
         return await this.api.deleteEvent(eventId, calendarId);
     }
 
-    public async getEventByCalendar(calendarId: string) {
-        return await this.api.getEventByCalendar(calendarId);
+    public async getEventByCalendar(calendar: CalendarEntity) {
+        return await this.api.getEventsByCalendar(calendar);
     }
 
     public async getUpdatedEvents() {
@@ -119,7 +119,7 @@ export class GoogleCalendarAssist extends Assist {
             if (
                 eventLink.googleCalendarCalendarId !== calendar.googleCalendarId
             ) {
-                await this.api.moveCalendar(
+                await this.api.moveEventCalendar(
                     eventLink.googleCalendarEventId,
                     eventLink.googleCalendarCalendarId,
                     calendar,
