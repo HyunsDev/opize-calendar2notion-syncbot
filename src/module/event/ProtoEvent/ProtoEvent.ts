@@ -9,9 +9,8 @@ export interface ProtoEventConstructorProps {
     googleCalendarEventId?: string;
     notionEventId?: string;
     calendar: CalendarEntity;
-    isSynced?: boolean;
-
     eventLink?: EventEntity;
+
     originalNotionEvent?: PageObjectResponse;
     originalGoogleCalendarEvent?: calendar_v3.Schema$Event;
 }
@@ -23,9 +22,7 @@ export abstract class ProtoEvent {
     googleCalendarEventId?: string;
     notionEventId?: string;
     calendar: CalendarEntity;
-    isSynced?: boolean;
 
-    readonly eventLink?: EventEntity;
     readonly originalNotionEvent?: PageObjectResponse;
     readonly originalGoogleCalendarEvent?: calendar_v3.Schema$Event;
 
@@ -36,9 +33,7 @@ export abstract class ProtoEvent {
         this.googleCalendarEventId = data.googleCalendarEventId;
         this.calendar = data.calendar;
         this.notionEventId = data.notionEventId;
-        this.isSynced = data.isSynced;
 
-        this.eventLink = data.eventLink;
         this.originalNotionEvent = data.originalNotionEvent;
         this.originalGoogleCalendarEvent = data.originalGoogleCalendarEvent;
     }

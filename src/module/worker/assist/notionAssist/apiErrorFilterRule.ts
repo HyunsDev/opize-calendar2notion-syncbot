@@ -103,7 +103,7 @@ export const baseNotionAPIErrorFilterRules: NotionAPIErrorFilterRule[] = [
     },
     {
         name: 'UNKNOWN_ERROR',
-        condition: (response) => true,
+        condition: () => true,
         callback: (err, context, args) => {
             throw new NotionAPIError({
                 code: SyncErrorCode.notion.api.UNKNOWN_ERROR,

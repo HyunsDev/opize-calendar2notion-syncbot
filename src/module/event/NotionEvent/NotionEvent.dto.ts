@@ -71,7 +71,6 @@ export class NotionEventDto extends ProtoEvent {
             date: NotionEventDto.convertDateFromEvent(event.date),
             googleCalendarEventLink: event.googleCalendarEventLink,
 
-            eventLink: event.eventLink,
             originalNotionEvent: event.originalNotionEvent,
             originalGoogleCalendarEvent: event.originalGoogleCalendarEvent,
         });

@@ -124,7 +124,7 @@ export class NotionAssistApi {
     }
 
     @NotionAPI('database')
-    async updateCalendarProps(
+    async updateCalendarOptions(
         calendars: {
             name: string;
             id?: string;
@@ -259,7 +259,13 @@ export class NotionAssistApi {
             };
         });
 
-        return result;
+        return result.map((page: PageObjectResponse) =>
+            NotionEventDto.fromNotionEvent(
+                page,
+                this.getCalendarByPageObject(page),
+                props,
+            ),
+        );
     }
 
     @NotionAPI('page')
@@ -421,7 +427,7 @@ export class NotionAssistApi {
         return prop;
     }
 
-    getCalendarByPageObject(page: PageObjectResponse) {
+    private getCalendarByPageObject(page: PageObjectResponse) {
         const props = this.context.user.parsedNotionProps;
         const calendar = this.context.calendars.find(
             (c) =>

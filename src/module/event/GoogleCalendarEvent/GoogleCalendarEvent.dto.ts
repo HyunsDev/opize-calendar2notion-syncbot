@@ -52,7 +52,6 @@ export class GoogleCalendarEventDto extends ProtoEvent {
             description: event.description,
             googleCalendarEventLink: event.googleCalendarEventLink,
 
-            eventLink: event.eventLink,
             originalNotionEvent: event.originalNotionEvent,
             originalGoogleCalendarEvent: event.originalGoogleCalendarEvent,
         });

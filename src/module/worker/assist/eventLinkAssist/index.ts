@@ -1,8 +1,7 @@
-import { PartialPageObjectResponse } from '@notionhq/client/build/src/api-endpoints';
 import { CalendarEntity, EventEntity } from '@opize/calendar2notion-object';
-import { calendar_v3 } from 'googleapis';
 
 import { DB } from '@/database';
+import { EventDto } from '@/module/event';
 
 import { WorkContext } from '../../context/work.context';
 
@@ -70,20 +69,16 @@ export class EventLinkAssist {
         return await DB.event.save(eventLink);
     }
 
-    public async create(
-        page: PartialPageObjectResponse,
-        event: calendar_v3.Schema$Event,
-        calendar: CalendarEntity,
-    ) {
+    public async create(event: EventDto) {
         const eventLink = EventEntity.create({
-            googleCalendarEventId: event.id,
-            googleCalendarCalendarId: calendar.googleCalendarId,
-            lastGoogleCalendarUpdate: new Date(event.updated),
+            googleCalendarEventId: event.googleCalendarEventId,
+            googleCalendarCalendarId: event.calendar.googleCalendarId,
+            lastGoogleCalendarUpdate: new Date(),
             lastNotionUpdate: new Date(),
             status: 'SYNCED',
             willRemove: false,
-            notionPageId: page.id,
-            calendar,
+            notionPageId: event.notionEventId,
+            calendar: event.calendar,
             user: this.context.user,
         });
         await DB.event.save(eventLink);

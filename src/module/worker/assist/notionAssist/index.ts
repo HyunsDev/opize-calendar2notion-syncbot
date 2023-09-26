@@ -1,11 +1,8 @@
 import { GetDatabaseResponse } from '@notionhq/client/build/src/api-endpoints';
 import { CalendarEntity } from '@opize/calendar2notion-object';
-import dayjs from 'dayjs';
-import timezone from 'dayjs/plugin/timezone';
-import utc from 'dayjs/plugin/utc';
-import { calendar_v3 } from 'googleapis';
 
 import { DB } from '@/database';
+import { EventDto, NotionEventDto } from '@/module/event';
 
 import { WorkContext } from '../../context/work.context';
 import { SyncErrorCode } from '../../error';
@@ -14,9 +11,6 @@ import { Assist } from '../../types/assist';
 import { EventLinkAssist } from '../eventLinkAssist';
 
 import { NotionAssistApi } from './api';
-
-dayjs.extend(utc);
-dayjs.extend(timezone);
 
 export class NotionAssist extends Assist {
     private context: WorkContext;
@@ -57,12 +51,10 @@ export class NotionAssist extends Assist {
             name: calendar.googleCalendarName,
             id: undefined,
         });
-        const database = await this.api.updateCalendarProps(calendarOptions);
+        const database = await this.api.updateCalendarOptions(calendarOptions);
 
         // 새로운 속성 찾기
-        const calendarProp: string = JSON.parse(
-            this.context.user.notionProps,
-        ).calendar;
+        const { calendar: calendarProp } = this.context.user.parsedNotionProps;
         const oldPropIds = this.context.calendars.map(
             (e) => e.notionPropertyId,
         );
@@ -87,11 +79,8 @@ export class NotionAssist extends Assist {
         await this.api.deletePage(pageId);
     }
 
-    public async addPage(
-        event: calendar_v3.Schema$Event,
-        calendar: CalendarEntity,
-    ) {
-        const page = await this.api.createPage(event, calendar);
+    public async addPage(event: EventDto) {
+        const page = await this.api.createPage(NotionEventDto.fromEvent(event));
         return page;
     }
 
@@ -106,60 +95,39 @@ export class NotionAssist extends Assist {
         return pages;
     }
 
-    public async CUDPage(
-        event: calendar_v3.Schema$Event,
-        calendar: CalendarEntity,
-    ) {
+    public async CUDPage(event: EventDto) {
         const eventLink = await this.eventLinkAssist.findByGCalEvent(
-            event.id,
-            calendar.googleCalendarId,
+            event.googleCalendarEventId,
+            event.calendar.googleCalendarId,
         );
 
         if (eventLink && eventLink.notionPageId) {
-            const gCalEventUpdated = dayjs(event.updated);
-            const userUpdated = dayjs(this.context.user.lastCalendarSync);
-            // const eventLinkUpdated = new Date(
-            //     eventLink.lastGoogleCalendarUpdate,
-            // );
-
-            // 이미 업데이트 된 이벤트
-            if (gCalEventUpdated < userUpdated) {
+            if (event.status === 'cancelled') {
+                await this.deletePage(event.notionEventId);
                 return;
             }
 
-            // 취소된 이벤트
-            if (event.status === 'cancelled') {
-                await this.deletePage(eventLink.notionPageId);
-                await this.eventLinkAssist.deleteEventLink(eventLink);
-                return true;
-            }
-
-            // 캘린더 이동
             if (
-                eventLink.googleCalendarCalendarId !== calendar.googleCalendarId
+                eventLink.googleCalendarCalendarId !==
+                event.calendar.googleCalendarId
             ) {
-                // 노션 페이지 calendar 속성은 update에서 적용되므로 이곳에서는 적용하지 않음
-                await this.eventLinkAssist.updateCalendar(eventLink, calendar);
+                await this.eventLinkAssist.updateCalendar(
+                    eventLink,
+                    event.calendar,
+                );
             }
-
-            await this.api.updatePage(eventLink, event, calendar);
-            await this.eventLinkAssist.updateLastNotionUpdate(eventLink);
-            return;
+            await this.api.updatePage(NotionEventDto.fromEvent(event));
         } else {
             if (event.status === 'cancelled') return;
-            const page = await this.api.createPage(event, calendar);
-            await this.eventLinkAssist.create(page, event, calendar);
+            const newEvent = await this.api.createPage(
+                NotionEventDto.fromEvent(event),
+            );
+            await this.eventLinkAssist.create(event.merge(newEvent.toEvent()));
         }
     }
 
     private checkProps(database: GetDatabaseResponse) {
-        const userProps: {
-            title: string;
-            calendar: string;
-            date: string;
-            delete: string;
-            link?: string;
-        } = JSON.parse(this.context.user.notionProps);
+        const userProps = this.context.user.parsedNotionProps;
 
         const requiredProps = ['title', 'calendar', 'date', 'delete'];
 
