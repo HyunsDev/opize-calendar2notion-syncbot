@@ -1,4 +1,3 @@
-import { GetDatabaseResponse } from '@notionhq/client/build/src/api-endpoints';
 import { CalendarEntity } from '@opize/calendar2notion-object';
 
 import { DB } from '@/database';
@@ -11,6 +10,7 @@ import { Assist } from '../../types/assist';
 import { EventLinkAssist } from '../eventLinkAssist';
 
 import { NotionAssistApi } from './api';
+import { NotionValidation } from './validate';
 
 export class NotionAssist extends Assist {
     private context: WorkContext;
@@ -35,9 +35,20 @@ export class NotionAssist extends Assist {
         });
     }
 
-    public async validation() {
-        const database = await this.api.getDatabase();
-        this.checkProps(database);
+    public async validationAndRestore() {
+        const validation = new NotionValidation(this.context, this.api);
+        const errors = await validation.run();
+        if (errors.length !== 0) {
+            throw new NotionSyncError({
+                code: SyncErrorCode.notion.sync.VALIDATION_ERROR,
+                user: this.context.user,
+                detail: errors
+                    .map((e) => `${e.error}: ${e.message}`)
+                    .join('\n'),
+            });
+        }
+
+        return true;
     }
 
     public async getDeletedPages() {
@@ -128,68 +139,6 @@ export class NotionAssist extends Assist {
             );
             await this.eventLinkAssist.create(event.merge(newEvent.toEvent()));
         }
-    }
-
-    private checkProps(database: GetDatabaseResponse) {
-        const userProps = this.context.user.parsedNotionProps;
-
-        const requiredProps = ['title', 'calendar', 'date', 'delete'];
-
-        const propsMap = {
-            title: 'title',
-            calendar: 'select',
-            date: 'date',
-            delete: 'checkbox',
-            link: 'url',
-        };
-
-        const errors: {
-            error: string;
-            message: string;
-        }[] = [];
-
-        for (const prop of requiredProps) {
-            if (!userProps[prop]) {
-                errors.push({
-                    error: 'prop_not_exist',
-                    message: `필수 속성인 ${prop} 이(가) 없습니다`,
-                });
-            }
-        }
-
-        for (const userProp in userProps) {
-            const prop = Object.values(database.properties).find(
-                (e) => e.id === userProps[userProp],
-            );
-            if (!prop) {
-                // 해당 prop이 존재 하지 않음
-                errors.push({
-                    error: 'prop_not_found',
-                    message: `${userProp}에 해당하는 속성을 찾을 수 없습니다. (아이디: ${userProps[userProp]})`,
-                });
-                continue;
-            }
-            if (propsMap[userProp] && prop.type !== propsMap[userProp]) {
-                // 정해진 타입과 일치하지 않음
-                errors.push({
-                    error: 'wrong_prop_type',
-                    message: `${userProp} 속성의 유형이 올바르지 않습니다. (기대한 타입: ${propsMap[userProp]}, 실제 타입: ${prop.type})`,
-                });
-                continue;
-            }
-        }
-
-        if (errors.length !== 0) {
-            throw new NotionSyncError({
-                code: SyncErrorCode.notion.sync.VALIDATION_ERROR,
-                user: this.context.user,
-                detail: errors
-                    .map((e) => `${e.error}: ${e.message}`)
-                    .join('\n'),
-            });
-        }
-
-        return true;
     }
 
     private getCalendarOptions(): {

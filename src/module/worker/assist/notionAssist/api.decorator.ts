@@ -17,7 +17,7 @@ export function NotionAPI(
             const res = await retry(
                 async () =>
                     await notionAPIErrorFilter(
-                        method.bind(this, args),
+                        method.bind(this, ...args),
                         targetObject,
                         context,
                         args,

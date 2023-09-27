@@ -396,7 +396,7 @@ export class NotionAssistApi {
             | 'last_edited_time'
             | 'checkbox'
             | 'date'
-            | 'last_edited_time'
+            | 'last_edited_by'
             | 'rich_text'
             | 'url',
     ) {
@@ -413,12 +413,13 @@ export class NotionAssistApi {
                 }
             }
         }
+
         const database = await this.client.databases.update({
             database_id: this.context.user.notionDatabaseId,
             properties: {
-                [name]: {
-                    name,
-                    type,
+                [_name]: {
+                    name: _name,
+                    [type]: {},
                 },
             },
         });

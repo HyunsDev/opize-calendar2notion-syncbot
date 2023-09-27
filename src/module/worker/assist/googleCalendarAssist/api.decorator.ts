@@ -13,7 +13,7 @@ export function GoogleCalendarAPI() {
             const res = await retry(
                 async () =>
                     await googleCalendarAPIErrorFilter(
-                        method.bind(this, args),
+                        method.bind(this, ...args),
                         context,
                         args,
                     ),

@@ -146,7 +146,7 @@ export class Worker {
     private async validation() {
         this.context.result.step = 'validation';
 
-        await this.workerAssist.validation();
+        await this.workerAssist.validationAndRestore();
     }
 
     // 제거된 페이지 삭제

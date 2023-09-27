@@ -35,8 +35,8 @@ export class WorkerAssist extends Assist {
         this.assistName = 'WorkerAssist';
     }
 
-    public async validation() {
-        await this.notionAssist.validation();
+    public async validationAndRestore() {
+        await this.notionAssist.validationAndRestore();
         await this.googleCalendarAssist.validation();
     }
 

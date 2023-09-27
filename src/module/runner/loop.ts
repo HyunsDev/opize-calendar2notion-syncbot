@@ -45,7 +45,7 @@ export abstract class Loop {
         } else {
             runnerLogger.error(
                 `[${this.loopId}:${user.id}:loop] 동기화 실패 (${
-                    res.failReason || 'No Respon'
+                    res.failReason || 'No Response'
                 })`,
             );
             context.report.failedSyncCount += 1;
@@ -93,7 +93,7 @@ export abstract class Loop {
 }
 
 export class InitUserLoop extends Loop {
-    type: 'init' = 'init';
+    type = 'init' as const;
 
     constructor(loopId: string) {
         super(loopId);
@@ -124,7 +124,7 @@ export class InitUserLoop extends Loop {
 }
 
 export class UserLoop extends Loop {
-    type: 'user' = 'user';
+    type = 'user' as const;
     plan: UserPlan;
 
     constructor(loopId: string, plan: UserPlan) {

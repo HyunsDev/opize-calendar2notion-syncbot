@@ -17,7 +17,7 @@ export const baseNotionAPIErrorFilterRules: NotionAPIErrorFilterRule[] = [
     {
         name: 'INVALID_REQUEST',
         condition: (err) => err.status === 400,
-        callback: (err, context, args) => {
+        callback: async (err, context, args) => {
             throw new NotionAPIError({
                 code: SyncErrorCode.notion.api.INVALID_REQUEST,
                 user: context.user,
@@ -29,7 +29,7 @@ export const baseNotionAPIErrorFilterRules: NotionAPIErrorFilterRule[] = [
     {
         name: 'UNAUTHORIZED',
         condition: (err) => err.status === 401,
-        callback: (err, context, args) => {
+        callback: async (err, context, args) => {
             throw new NotionAPIError({
                 code: SyncErrorCode.notion.api.UNAUTHORIZED,
                 user: context.user,
@@ -41,7 +41,7 @@ export const baseNotionAPIErrorFilterRules: NotionAPIErrorFilterRule[] = [
     {
         name: 'DATABASE_NOT_FOUND',
         condition: (err, target) => err.status === 404 && target === 'database',
-        callback: (err, context, args) => {
+        callback: async (err, context, args) => {
             throw new NotionAPIError({
                 code: SyncErrorCode.notion.api.DATABASE_NOT_FOUND,
                 user: context.user,
@@ -53,7 +53,7 @@ export const baseNotionAPIErrorFilterRules: NotionAPIErrorFilterRule[] = [
     {
         name: 'PAGE_NOT_FOUND',
         condition: (err, target) => err.status === 404 && target === 'page',
-        callback: (err, context, args) => {
+        callback: async (err, context, args) => {
             throw new NotionAPIError({
                 code: SyncErrorCode.notion.api.PAGE_NOT_FOUND,
                 user: context.user,
@@ -65,7 +65,7 @@ export const baseNotionAPIErrorFilterRules: NotionAPIErrorFilterRule[] = [
     {
         name: 'RATE_LIMIT',
         condition: (err) => err.status === 429,
-        callback: (err, context, args) => {
+        callback: async (err, context, args) => {
             throw new NotionAPIError({
                 code: SyncErrorCode.notion.api.RATE_LIMIT,
                 user: context.user,
@@ -77,7 +77,7 @@ export const baseNotionAPIErrorFilterRules: NotionAPIErrorFilterRule[] = [
     {
         name: 'INTERNAL_SERVER_ERROR',
         condition: (err) => err.status === 500,
-        callback: (err, context, args) => {
+        callback: async (err, context, args) => {
             throw new NotionAPIError({
                 code: SyncErrorCode.notion.api.INTERNAL_SERVER_ERROR,
                 user: context.user,
@@ -89,7 +89,7 @@ export const baseNotionAPIErrorFilterRules: NotionAPIErrorFilterRule[] = [
     {
         name: 'SERVICE_UNAVAILABLE',
         condition: (err) => err.status === 503,
-        callback: (err, context, args) => {
+        callback: async (err, context, args) => {
             throw new NotionAPIError({
                 code: SyncErrorCode.notion.api.SERVICE_UNAVAILABLE,
                 user: context.user,
@@ -101,7 +101,7 @@ export const baseNotionAPIErrorFilterRules: NotionAPIErrorFilterRule[] = [
     {
         name: 'UNKNOWN_ERROR',
         condition: () => true,
-        callback: (err, context, args) => {
+        callback: async (err, context, args) => {
             throw new NotionAPIError({
                 code: SyncErrorCode.notion.api.UNKNOWN_ERROR,
                 user: context.user,
