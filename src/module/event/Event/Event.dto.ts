@@ -38,7 +38,29 @@ export class EventDto extends ProtoEvent {
      * 값이 다른 속성이 있을 경우 인자로 받은 Event의 값으로 덮어씁니다.
      */
     merge(event: EventDto): EventDto {
-        const mergedEvent = new EventDto(Object.assign({}, this, event));
+        const mergedEvent = new EventDto({
+            eventSource: event.eventSource || this.eventSource,
+
+            eventId: event.eventId || this.eventId,
+            googleCalendarEventId:
+                event.googleCalendarEventId || this.googleCalendarEventId,
+            calendar: event.calendar || this.calendar,
+            notionPageId: event.notionPageId || this.notionPageId,
+
+            title: event.title || this.title,
+            status: event.status || this.status,
+            location: event.location || this.location,
+            description: event.description || this.description,
+            date: event.date || this.date,
+            googleCalendarEventLink:
+                event.googleCalendarEventLink || this.googleCalendarEventLink,
+
+            originalNotionEvent:
+                event.originalNotionEvent || this.originalNotionEvent,
+            originalGoogleCalendarEvent:
+                event.originalGoogleCalendarEvent ||
+                this.originalGoogleCalendarEvent,
+        });
         return mergedEvent;
     }
 }

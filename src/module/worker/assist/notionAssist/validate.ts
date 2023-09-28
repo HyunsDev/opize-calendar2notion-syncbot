@@ -44,8 +44,7 @@ export class NotionValidation {
         for (const prop of REQUIRED_PROPS) {
             if (!userProps[prop]) {
                 if (contains(ADDABLE_REQUIRED_PROPS, prop)) {
-                    console.log(prop);
-                    await this.restoreUserProp(prop);
+                    await this.restoreProp(prop);
                     continue;
                 }
 
@@ -57,21 +56,6 @@ export class NotionValidation {
         }
     }
 
-    private async restoreUserProp(
-        prop: (typeof ADDABLE_REQUIRED_PROPS)[number],
-    ) {
-        const propType = ADDABLE_REQUIRED_NOTION_PROPS_MAP[prop];
-
-        const newProp = await this.api.addProp(prop, propType);
-
-        const newProps = {
-            ...this.context.user.parsedNotionProps,
-            [prop]: newProp.id,
-        };
-        this.context.user.notionProps = JSON.stringify(newProps);
-        this.context.user = await DB.user.save(this.context.user);
-    }
-
     private async validateNotionProps() {
         const userProps = this.context.user.parsedNotionProps;
 
@@ -81,12 +65,18 @@ export class NotionValidation {
             );
             if (!prop) {
                 // 해당 prop이 존재 하지 않음
+                if (contains(ADDABLE_REQUIRED_PROPS, userProp)) {
+                    await this.restoreProp(userProp);
+                    continue;
+                }
+
                 this.errors.push({
                     error: 'prop_not_found',
                     message: `${userProp}에 해당하는 속성을 찾을 수 없습니다. (아이디: ${userProps[userProp]})`,
                 });
                 continue;
             }
+
             if (
                 REQUIRED_NOTION_PROPS_MAP[userProp] &&
                 prop.type !== REQUIRED_NOTION_PROPS_MAP[userProp]
@@ -99,5 +89,18 @@ export class NotionValidation {
                 continue;
             }
         }
+    }
+
+    private async restoreProp(prop: (typeof ADDABLE_REQUIRED_PROPS)[number]) {
+        const propType = ADDABLE_REQUIRED_NOTION_PROPS_MAP[prop];
+
+        const newProp = await this.api.addProp(prop, propType);
+
+        const newProps = {
+            ...this.context.user.parsedNotionProps,
+            [prop]: newProp.id,
+        };
+        this.context.user.notionProps = JSON.stringify(newProps);
+        this.context.user = await DB.user.save(this.context.user);
     }
 }

@@ -666,10 +666,10 @@
     "@types/node-fetch" "^2.5.10"
     node-fetch "^2.6.1"
 
-"@opize/calendar2notion-object@^2.1.0":
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/@opize/calendar2notion-object/-/calendar2notion-object-2.1.0.tgz#17045e6d31f8b123b81ba57172c1457e50f2e2e2"
-  integrity sha512-cxWH7pBw5KqSrIIzPkL23LSkc/mONfmK5E5UVT9ztGKv6RRWCzP6wsRACOoAAiLU9ZYpb3LfWd4X4SKobAbh9g==
+"@opize/calendar2notion-object@^2.1.1":
+  version "2.1.1"
+  resolved "https://registry.yarnpkg.com/@opize/calendar2notion-object/-/calendar2notion-object-2.1.1.tgz#a1e116b3494d082ec1d129434dfc6f169a8c707a"
+  integrity sha512-ZCGU9q34EwYyBudKNMDX+eF24ZCbj/fqxPX1CWhGOlI3q57S6XUJryLdP3Dqm1fkg7ZFCcjY24BjclW9d81Zlw==
   dependencies:
     class-transformer "^0.5.1"
     class-validator "^0.14.0"

@@ -12,7 +12,7 @@ export const REQUIRED_PROPS = [
     'calendar',
     'date',
     'delete',
-    'googleCalendarEvent',
+    'link',
     'location',
     'description',
     'last_edited_by',
@@ -21,7 +21,7 @@ export const REQUIRED_PROPS = [
 export const ADDABLE_REQUIRED_PROPS = [
     'delete',
     'last_edited_by',
-    'googleCalendarEvent',
+    'link',
     'location',
     'description',
 ] as const;
@@ -34,7 +34,7 @@ export const REQUIRED_NOTION_PROPS_MAP: Record<
     calendar: 'select',
     date: 'date',
     delete: 'checkbox',
-    googleCalendarEvent: 'url',
+    link: 'url',
     description: 'rich_text',
     location: 'rich_text',
     last_edited_by: 'last_edited_by',
@@ -47,6 +47,6 @@ export const ADDABLE_REQUIRED_NOTION_PROPS_MAP: Record<
     delete: 'checkbox',
     last_edited_by: 'last_edited_by',
     description: 'rich_text',
-    googleCalendarEvent: 'url',
+    link: 'url',
     location: 'rich_text',
 } as const;

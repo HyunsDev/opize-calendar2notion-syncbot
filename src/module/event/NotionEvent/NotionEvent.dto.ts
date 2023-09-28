@@ -15,13 +15,13 @@ const getProp = <
     T extends P['properties'][string]['type'],
 >(
     page: P,
-    propName: string,
+    propId: string,
     type: T,
 ): Extract<P['properties'][string], { type: T }> => {
-    const prop = page.properties[propName];
+    const prop = Object.values(page.properties).find((e) => e.id === propId);
     if (prop.type !== type) {
         throw new Error(
-            `Property ${propName} is not of type ${type}, but ${prop.type}`,
+            `Property ${propId} is not of type ${type}, but ${prop.type}`,
         );
     }
     return prop as Extract<P['properties'][string], { type: T }>;
@@ -62,7 +62,7 @@ export class NotionEventDto extends ProtoEvent {
             eventId: event.eventId,
             googleCalendarEventId: event.googleCalendarEventId,
             calendar: event.calendar,
-            notionEventId: event.notionPageId,
+            notionPageId: event.notionPageId,
 
             title: event.title,
             isDeleted: event.status === 'confirmed',
@@ -86,7 +86,7 @@ export class NotionEventDto extends ProtoEvent {
             eventSource: 'notion',
 
             eventId: undefined,
-            notionEventId: originalEvent.id,
+            notionPageId: originalEvent.id,
             googleCalendarEventId: undefined,
             calendar,
 
@@ -121,7 +121,7 @@ export class NotionEventDto extends ProtoEvent {
 
             eventId: this.eventId,
             googleCalendarEventId: this.googleCalendarEventId,
-            notionEventId: this.notionPageId,
+            notionPageId: this.notionPageId,
             calendar: this.calendar,
 
             title: this.title,
@@ -162,7 +162,18 @@ export class NotionEventDto extends ProtoEvent {
                     dateTime: notionDate.end,
                 };
             }
+        } else {
+            if (notionDate.start.length === 10) {
+                date.end = {
+                    date: notionDate.start,
+                };
+            } else {
+                date.end = {
+                    dateTime: notionDate.start,
+                };
+            }
         }
+
         return date;
     }
 

@@ -433,7 +433,9 @@ export class NotionAssistApi {
             (c) =>
                 c.googleCalendarName ===
                 (
-                    page.properties[props.calendar] as {
+                    Object.values(page.properties).find(
+                        (e) => e.id === props.calendar,
+                    ) as {
                         type: string;
                         select: {
                             name: string;
