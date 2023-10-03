@@ -16,6 +16,20 @@ const logFormat = printf(
     },
 );
 
+const debugLogFormat = printf(
+    ({
+        timestamp,
+        level,
+        message,
+    }: {
+        timestamp: string;
+        level: string;
+        message: string;
+    }) => {
+        return `[${level}:${timestamp}] ${message}`;
+    },
+);
+
 export const loggerGenerator = (name: string) => {
     const logDir = `logs/${name}`;
     const logger = winston.createLogger({
@@ -50,7 +64,10 @@ export const loggerGenerator = (name: string) => {
             new winston.transports.Console({
                 format: combine(
                     winston.format.colorize(),
-                    winston.format.simple(),
+                    timestamp({
+                        format: 'HH:mm:ss',
+                    }),
+                    debugLogFormat,
                 ),
                 level: 'debug',
             }),

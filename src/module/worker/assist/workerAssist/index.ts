@@ -6,6 +6,7 @@ import { DB } from '@/database';
 import { GoogleCalendarEventDto } from '@/module/event';
 
 import { NotionAssist, EventLinkAssist, GoogleCalendarAssist } from '..';
+import PackageJSON from '../../../../../package.json';
 import { WorkContext } from '../../context/work.context';
 import { Assist } from '../../types/assist';
 
@@ -87,9 +88,10 @@ export class WorkerAssist extends Assist {
 
     public async startSyncUserUpdate() {
         await DB.user.update(this.context.user.id, {
-            workStartedAt: this.context.user.lastCalendarSync,
+            workStartedAt: this.context.startedAt,
             isWork: true,
             syncbotId: process.env.SYNCBOT_PREFIX,
+            syncbotVersion: PackageJSON.version,
         });
     }
 
@@ -99,7 +101,7 @@ export class WorkerAssist extends Assist {
             lastSyncStatus: '',
             isWork: false,
             syncbotId: null,
-            lastCalendarSync: new Date(),
+            lastCalendarSync: this.context.referenceTime,
         });
     }
 

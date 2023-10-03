@@ -8,7 +8,7 @@ export function Timeout(ms: number) {
     ) {
         const originalMethod = descriptor.value;
         descriptor.value = async function (...args: any[]) {
-            return await timeout(originalMethod.bind(this, args), ms);
+            return await timeout(await originalMethod.bind(this, ...args), ms);
         };
     };
 }

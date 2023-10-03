@@ -1,8 +1,9 @@
+import dayjs from 'dayjs';
 import { Not } from 'typeorm';
 
 import { DB } from '@/database';
 import { workerLogger } from '@/logger/winston';
-import { TimeoutError, timeout } from '@/utils';
+import { Timeout } from '@/utils';
 
 import { context } from '../context';
 
@@ -13,12 +14,7 @@ import {
     WorkerAssist,
 } from './assist';
 import { WorkContext } from './context/work.context';
-import { SyncTimeoutError } from './error/syncbot.error';
-import {
-    isSyncError,
-    syncErrorFilter,
-    unknownErrorFilter,
-} from './exception/syncException';
+import { workerExceptionFilter } from './exception/exceptionFilter';
 import { WorkerResult } from './types/result';
 
 export class Worker {
@@ -29,67 +25,36 @@ export class Worker {
     eventLinkAssist: EventLinkAssist;
     workerAssist: WorkerAssist;
 
+    private debugLog(message: string) {
+        workerLogger.debug(
+            `[${this.context.workerId}:${this.context.user.id}] ${message}`,
+        );
+    }
+
     constructor(userId: number, workerId: string) {
-        this.context = new WorkContext(workerId, userId, new Date());
+        const now = dayjs();
+        const startedAt = now.toDate();
+        const referenceTime = now.second(0).millisecond(0).toDate();
+        this.context = new WorkContext(
+            workerId,
+            userId,
+            startedAt,
+            referenceTime,
+        );
     }
 
     async run(): Promise<WorkerResult> {
-        this.context.startedAt = new Date();
-        this.context.user = await DB.user.findOne({
-            where: {
-                id: this.context.userId,
-            },
-        });
-
-        try {
-            await this.runStepsWithTimeout();
-        } catch (err) {
-            try {
-                this.context.result.fail = true;
-
-                if (isSyncError(err)) {
-                    this.context.result.failReason = err.code;
-                    workerLogger.error(
-                        `[${this.context.workerId}:${this.context.user.id}] 문제가 발견되어 동기화에 실패하였습니다. (${err.code})`,
-                    );
-                    await syncErrorFilter(this.context, err);
-                } else {
-                    workerLogger.error(
-                        `[${this.context.workerId}:${this.context.user.id}] 동기화 과정 중 알 수 없는 오류가 발생하여 동기화에 실패하였습니다. \n[알 수 없는 오류 디버그 보고서]\nname: ${err.name}\nmessage: ${err.message}\nstack: ${err.stack}`,
-                    );
-                    await unknownErrorFilter(this.context, err);
-                }
-            } catch (err) {
-                workerLogger.error(
-                    `[${this.context.workerId}:${this.context.user.id}] **에러 필터 실패** 동기화 과정 중 알 수 없는 오류가 발생하여 동기화에 실패하였습니다. \n[알 수 없는 오류 디버그 보고서]\nname: ${err.name}\nmessage: ${err.message}\nstack: ${err.stack}`,
-                );
-                console.error('처리할 수 없는 에러');
-                console.log(err);
-            }
-        }
-
-        await DB.user.update(this.context.user.id, {
-            isWork: false,
-        });
+        this.context.user = await this.getTargetUser();
+        await workerExceptionFilter(
+            async () => await this.runSteps(),
+            this.context,
+        );
 
         const result = this.context.getResult();
         return result;
     }
 
-    private async runStepsWithTimeout() {
-        try {
-            await timeout(this.runSteps(), context.syncBot.timeout);
-        } catch (err) {
-            if (err instanceof TimeoutError) {
-                throw new SyncTimeoutError({
-                    user: this.context.user,
-                });
-            } else {
-                throw err;
-            }
-        }
-    }
-
+    @Timeout(context.syncBot.timeout)
     private async runSteps() {
         await this.init();
         await this.startSync();
@@ -106,11 +71,15 @@ export class Worker {
         await this.endSync();
     }
 
+    /**
+     * 작업을 시작하기 전에 필요한 데이터를 불러오고, Assist를 초기화합니다.
+     */
     private async init() {
-        this.context.startedAt = new Date();
-        this.context.user = await this.getTargetUser();
+        this.debugLog('STEP: init');
+
         const calendars = await this.getUserCalendar();
         this.context.setCalendars(calendars);
+
         this.context.config = this.context.getInitConfig();
 
         this.eventLinkAssist = new EventLinkAssist({
@@ -135,22 +104,25 @@ export class Worker {
         });
     }
 
-    // 작업 시작
+    /**
+     *
+     */
     private async startSync() {
+        this.debugLog('STEP: startSync');
         this.context.result.step = 'startSync';
-
         await this.workerAssist.startSyncUserUpdate();
     }
 
     // 유효성 검증
     private async validation() {
+        this.debugLog('STEP: validation');
         this.context.result.step = 'validation';
-
         await this.workerAssist.validationAndRestore();
     }
 
     // 제거된 페이지 삭제
     private async eraseDeletedEvent() {
+        this.debugLog('STEP: eraseDeletedEvent');
         this.context.result.step = 'eraseDeletedEvent';
 
         await this.workerAssist.eraseDeletedNotionPage();
@@ -159,11 +131,15 @@ export class Worker {
 
     // 동기화
     private async syncEvents() {
+        this.debugLog('STEP: validation');
         this.context.result.step = 'syncEvents';
 
         const updatedPages = await this.notionAssist.getUpdatedPages();
+        this.debugLog(`updatedPages: ${updatedPages.length}개`);
+
         const updatedGCalEvents =
             await this.googleCalendarAssist.getUpdatedEvents();
+        this.debugLog(`updatedGCalEvents: ${updatedGCalEvents.length}개`);
 
         for (const event of updatedGCalEvents) {
             await this.notionAssist.CUDPage(event);
@@ -213,6 +189,7 @@ export class Worker {
             where: {
                 id: this.context.userId,
             },
+            relations: ['notionWorkspace'],
         });
     }
 

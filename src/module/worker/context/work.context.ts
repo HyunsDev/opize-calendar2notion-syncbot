@@ -11,9 +11,10 @@ dayjs.extend(utc);
 dayjs.extend(timezone);
 
 export class WorkContext {
-    workerId: string;
-    startedAt: Date;
-    userId: number;
+    readonly workerId: string;
+    readonly startedAt: Date;
+    readonly referenceTime: Date;
+    readonly userId: number;
     config: SyncConfig;
     result: WorkerResult;
 
@@ -22,9 +23,15 @@ export class WorkContext {
     connectedCalendars: CalendarEntity[];
     writeableCalendars: CalendarEntity[];
 
-    constructor(workerId: string, userId: number, startedAt: Date) {
+    constructor(
+        workerId: string,
+        userId: number,
+        startedAt: Date,
+        referenceTime: Date,
+    ) {
         this.workerId = workerId;
         this.startedAt = startedAt;
+        this.referenceTime = referenceTime;
         this.userId = userId;
 
         this.result = {
