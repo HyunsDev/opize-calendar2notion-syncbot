@@ -3,7 +3,6 @@ import { Not } from 'typeorm';
 
 import { DB } from '@/database';
 import { workerLogger } from '@/logger/winston';
-import { Timeout } from '@/utils';
 
 import { context } from '../context';
 
@@ -16,6 +15,7 @@ import {
 import { WorkContext } from './context/work.context';
 import { workerExceptionFilter } from './exception/exceptionFilter';
 import { WorkerResult } from './types/result';
+import { timeout } from '@/utils';
 
 export class Worker {
     context: WorkContext;
@@ -46,7 +46,7 @@ export class Worker {
     async run(): Promise<WorkerResult> {
         this.context.user = await this.getTargetUser();
         await workerExceptionFilter(
-            async () => await this.runSteps(),
+            async () => await timeout(this.runSteps(), context.syncBot.timeout),
             this.context,
         );
 
@@ -54,7 +54,6 @@ export class Worker {
         return result;
     }
 
-    @Timeout(context.syncBot.timeout)
     private async runSteps() {
         await this.init();
         await this.startSync();
