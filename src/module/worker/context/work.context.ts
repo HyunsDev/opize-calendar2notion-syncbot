@@ -10,11 +10,29 @@ import { SyncConfig } from '../types/syncConfig';
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
+const getInitConfig = (user: UserEntity) => {
+    const config = {
+        timeMin:
+            user.syncYear === 0
+                ? env.MIN_DATE
+                : dayjs(
+                      `${user.syncYear - 1}-01-01T01:00:00+09:00`,
+                  ).toISOString(),
+        timeMax: env.MAX_DATE,
+    };
+    return config;
+};
+
 export class WorkContext {
     readonly workerId: string;
-    readonly startedAt: Date;
-    readonly referenceTime: Date;
     readonly userId: number;
+
+    readonly startedAt: Date;
+    syncPeriod: {
+        start: Date;
+        end: Date;
+    };
+
     config: SyncConfig;
     result: WorkerResult;
 
@@ -23,16 +41,18 @@ export class WorkContext {
     connectedCalendars: CalendarEntity[];
     writeableCalendars: CalendarEntity[];
 
-    constructor(
-        workerId: string,
-        userId: number,
-        startedAt: Date,
-        referenceTime: Date,
-    ) {
+    constructor(workerId: string, userId: number) {
         this.workerId = workerId;
-        this.startedAt = startedAt;
-        this.referenceTime = referenceTime;
         this.userId = userId;
+
+        const now = dayjs();
+        const startedAt = now.toDate();
+        this.startedAt = startedAt;
+
+        this.syncPeriod = {
+            start: undefined,
+            end: now.second(0).millisecond(0).toDate(),
+        };
 
         this.result = {
             step: 'init',
@@ -51,6 +71,12 @@ export class WorkContext {
         };
     }
 
+    setUser(user: UserEntity) {
+        this.user = user;
+        this.syncPeriod.start = dayjs(user.lastCalendarSync).toDate();
+        this.config = getInitConfig(this.user);
+    }
+
     setCalendars(calendars: CalendarEntity[]) {
         this.calendars = calendars;
         this.connectedCalendars = calendars.filter(
@@ -59,19 +85,6 @@ export class WorkContext {
         this.writeableCalendars = calendars
             .filter((e) => e.status === 'CONNECTED')
             .filter((e) => e.accessRole !== 'reader');
-    }
-
-    getInitConfig() {
-        const config = {
-            timeMin:
-                this.user.syncYear === 0
-                    ? env.MIN_DATE
-                    : dayjs(
-                          `${this.user.syncYear - 1}-01-01T01:00:00+09:00`,
-                      ).toISOString(),
-            timeMax: env.MAX_DATE,
-        };
-        return config;
     }
 
     getResult() {

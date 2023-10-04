@@ -32,24 +32,15 @@ export class Worker {
     }
 
     constructor(userId: number, workerId: string) {
-        const now = dayjs();
-        const startedAt = now.toDate();
-        const referenceTime = now.second(0).millisecond(0).toDate();
-        this.context = new WorkContext(
-            workerId,
-            userId,
-            startedAt,
-            referenceTime,
-        );
+        this.context = new WorkContext(workerId, userId);
     }
 
     async run(): Promise<WorkerResult> {
-        this.context.user = await this.getTargetUser();
+        this.context.setUser(await this.getTargetUser());
         await workerExceptionFilter(
             async () => await timeout(this.runSteps(), bot.syncBot.timeout),
             this.context,
         );
-
         const result = this.context.getResult();
         return result;
     }
@@ -59,7 +50,7 @@ export class Worker {
         await this.startSync();
         await this.validation();
 
-        if (this.context.user.lastCalendarSync) {
+        if (this.isUserInitialized()) {
             await this.eraseDeletedEvent();
             await this.syncEvents();
             await this.syncNewCalendars();
@@ -70,6 +61,10 @@ export class Worker {
         await this.endSync();
     }
 
+    private isUserInitialized() {
+        return this.context.user.lastCalendarSync;
+    }
+
     /**
      * 작업을 시작하기 전에 필요한 데이터를 불러오고, Assist를 초기화합니다.
      */
@@ -78,8 +73,6 @@ export class Worker {
 
         const calendars = await this.getUserCalendar();
         this.context.setCalendars(calendars);
-
-        this.context.config = this.context.getInitConfig();
 
         this.eventLinkAssist = new EventLinkAssist({
             context: this.context,
