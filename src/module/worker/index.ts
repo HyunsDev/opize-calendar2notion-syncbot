@@ -4,7 +4,7 @@ import { Not } from 'typeorm';
 import { DB } from '@/database';
 import { workerLogger } from '@/logger/winston';
 
-import { context } from '../context';
+import { bot } from '../bot';
 
 import {
     EventLinkAssist,
@@ -46,7 +46,7 @@ export class Worker {
     async run(): Promise<WorkerResult> {
         this.context.user = await this.getTargetUser();
         await workerExceptionFilter(
-            async () => await timeout(this.runSteps(), context.syncBot.timeout),
+            async () => await timeout(this.runSteps(), bot.syncBot.timeout),
             this.context,
         );
 

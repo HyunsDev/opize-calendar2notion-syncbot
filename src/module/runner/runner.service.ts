@@ -7,7 +7,7 @@ import { IsNull, LessThan } from 'typeorm';
 import { DB } from '@/database';
 import { runnerLogger } from '@/logger/winston';
 
-import { context } from '../context';
+import { bot } from '../bot';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -72,9 +72,7 @@ export class RunnerService {
     }
 
     private isWorkingUser(userId: number) {
-        return context.worker.workers
-            .map((e) => e.nowWorkUserId)
-            .includes(userId);
+        return bot.worker.workers.map((e) => e.nowWorkUserId).includes(userId);
     }
 }
 

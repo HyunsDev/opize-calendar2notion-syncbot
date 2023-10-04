@@ -2,7 +2,7 @@ import { ReportContext } from './report.context';
 import { SyncBotContext } from './syncbot.context';
 import { WorkerContext } from './worker.context';
 
-class Context {
+class BotContext {
     worker: WorkerContext;
     syncBot: SyncBotContext;
     report: ReportContext;
@@ -14,4 +14,4 @@ class Context {
     }
 }
 
-export const context = new Context();
+export const bot = new BotContext();

@@ -1,7 +1,7 @@
 import { Embed } from '@hyunsdev/discord-webhook';
 import express from 'express';
 
-import { context } from '@/module/context';
+import { bot } from '@/module/bot';
 
 import { AppDataSource } from '../../../database';
 import { webhook } from '../../../logger/webhook';
@@ -11,7 +11,7 @@ const router = express.Router();
 
 router.use(authGuard);
 router.post('/stop', async (req, res) => {
-    context.syncBot.stop = true;
+    bot.syncBot.stop = true;
 
     const embed = new Embed({
         title: '종료 요청을 받았습니다.',
@@ -43,7 +43,7 @@ router.post('/exit', async (req, res) => {
     res.status(200).send({
         message: '30초 이내에 종료됩니다.',
     });
-    context.syncBot.stop = true;
+    bot.syncBot.stop = true;
 
     setTimeout(async () => {
         await AppDataSource.destroy();

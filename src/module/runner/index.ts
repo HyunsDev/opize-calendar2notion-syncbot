@@ -2,7 +2,7 @@ import { UserPlan } from '@opize/calendar2notion-object';
 
 import { runnerLogger } from '@/logger/winston';
 
-import { context } from '../context';
+import { bot } from '../bot';
 
 import { InitUserLoop, Loop, UserLoop } from './loop';
 import { RunnerService, runnerService } from './runner.service';
@@ -20,7 +20,7 @@ export class Runner {
         const loopPromises = this.getLoopPromises();
         await Promise.allSettled(loopPromises);
 
-        if (context.syncBot.stop) {
+        if (bot.syncBot.stop) {
             runnerLogger.info(`[Runner] 모든 루프가 정상적으로 종료되었습니다`);
         } else {
             runnerLogger.error(
@@ -39,7 +39,7 @@ export class Runner {
     }
 
     private getLoops() {
-        const workerAmount = Object.entries(context.syncBot.workerAmount);
+        const workerAmount = Object.entries(bot.syncBot.workerAmount);
         const loops: Loop[] = [];
 
         let i = 0;

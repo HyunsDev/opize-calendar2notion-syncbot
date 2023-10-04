@@ -6,7 +6,7 @@ import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
 import express from 'express';
 
-import { context } from '@/module/context';
+import { bot } from '@/module/bot';
 
 import { authGuard } from '../middleware/auth';
 
@@ -17,7 +17,7 @@ const router = express.Router();
 
 router.use(authGuard);
 router.get('/', (req, res, next) => {
-    res.send(context);
+    res.send(bot);
 });
 
 router.use(

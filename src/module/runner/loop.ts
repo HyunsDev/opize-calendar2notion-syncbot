@@ -4,7 +4,7 @@ import axios from 'axios';
 import { runnerLogger } from '@/logger/winston';
 import { sleep } from '@/utils';
 
-import { context } from '../context';
+import { bot } from '../bot';
 import { Worker } from '../worker';
 import { WorkerResult } from '../worker/types/result';
 
@@ -23,11 +23,11 @@ export abstract class Loop {
     abstract run(): Promise<void>;
 
     protected getStopSignal() {
-        return context.syncBot.stop;
+        return bot.syncBot.stop;
     }
 
     protected async runWorker(user: UserEntity) {
-        const contextWorker = context.worker.workers.find(
+        const contextWorker = bot.worker.workers.find(
             (worker) => worker.loopId === this.loopId,
         );
         contextWorker.nowWorkUserId = user.id;
@@ -41,14 +41,14 @@ export abstract class Loop {
             runnerLogger.info(
                 `[${this.loopId}:${user.id}:loop] 동기화 성공 (${res.simpleResponse})`,
             );
-            context.report.successfulSyncCount += 1;
+            bot.report.successfulSyncCount += 1;
         } else {
             runnerLogger.error(
                 `[${this.loopId}:${user.id}:loop] 동기화 실패 (${
                     res.failReason || 'No Response'
                 })`,
             );
-            context.report.failedSyncCount += 1;
+            bot.report.failedSyncCount += 1;
         }
         contextWorker.completedSyncCount += 1;
         contextWorker.nowWorkUserId = null;
@@ -97,7 +97,7 @@ export class InitUserLoop extends Loop {
 
     constructor(loopId: string) {
         super(loopId);
-        context.worker.workers.push({
+        bot.worker.workers.push({
             loopId: loopId,
             completedSyncCount: 0,
             nowWorkUserId: null,
@@ -118,7 +118,7 @@ export class InitUserLoop extends Loop {
                 continue;
             }
             await this.runWorker(user);
-            context.report.initCount += 1;
+            bot.report.initCount += 1;
         }
     }
 }
@@ -130,7 +130,7 @@ export class UserLoop extends Loop {
     constructor(loopId: string, plan: UserPlan) {
         super(loopId);
         this.plan = plan;
-        context.worker.workers.push({
+        bot.worker.workers.push({
             loopId: loopId,
             completedSyncCount: 0,
             nowWorkUserId: null,
@@ -154,7 +154,7 @@ export class UserLoop extends Loop {
                 continue;
             }
             await this.runWorker(user);
-            context.report.initCount += 1;
+            bot.report.initCount += 1;
         }
     }
 }
