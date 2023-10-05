@@ -28,7 +28,7 @@ export class WorkContext {
     readonly userId: number;
 
     readonly startedAt: Date;
-    syncPeriod: {
+    period: {
         start: Date;
         end: Date;
     };
@@ -49,7 +49,10 @@ export class WorkContext {
         const startedAt = now.toDate();
         this.startedAt = startedAt;
 
-        this.syncPeriod = {
+        /**
+         * 동기화 기간은 start 이상, end 미만으로 적용됩니다.
+         */
+        this.period = {
             start: undefined,
             end: now.second(0).millisecond(0).toDate(),
         };
@@ -73,7 +76,7 @@ export class WorkContext {
 
     setUser(user: UserEntity) {
         this.user = user;
-        this.syncPeriod.start = dayjs(user.lastCalendarSync).toDate();
+        this.period.start = dayjs(user.lastCalendarSync).toDate();
         this.config = getInitConfig(this.user);
     }
 

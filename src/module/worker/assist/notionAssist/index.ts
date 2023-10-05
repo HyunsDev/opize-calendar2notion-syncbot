@@ -131,6 +131,7 @@ export class NotionAssist extends Assist {
                     event.calendar,
                 );
             }
+
             await this.api.updatePage(NotionEventDto.fromEvent(event));
         } else {
             if (event.status === 'cancelled') return;

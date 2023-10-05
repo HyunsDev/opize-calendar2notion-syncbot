@@ -130,18 +130,18 @@ export class GoogleCalendarAssistApi {
                 singleEvents: true,
                 timeMin: this.context.config.timeMin,
                 timeMax: this.context.config.timeMax,
-                updatedMin: new Date(
-                    this.context.user.lastCalendarSync,
-                ).toISOString(),
+                updatedMin: this.context.period.start.toISOString(),
             });
             return {
                 results: res.data.items || [],
                 nextCursor: res.data.nextPageToken,
             };
         });
-        return res.map((event) =>
-            GoogleCalendarEventDto.fromGoogleCalendar(event, calendar),
-        );
+        return res
+            .filter((e) => new Date(e.updated) < this.context.period.end)
+            .map((event) =>
+                GoogleCalendarEventDto.fromGoogleCalendar(event, calendar),
+            );
     }
 
     @GoogleCalendarAPI()

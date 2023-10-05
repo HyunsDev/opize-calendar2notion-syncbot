@@ -36,11 +36,6 @@ export class WorkerAssist extends Assist {
         this.assistName = 'WorkerAssist';
     }
 
-    public async validationAndRestore() {
-        await this.notionAssist.validationAndRestore();
-        await this.googleCalendarAssist.validation();
-    }
-
     public async eraseDeletedNotionPage() {
         const notionDeletedPages = await this.notionAssist.getDeletedPages();
         for (const page of notionDeletedPages) {
@@ -97,11 +92,10 @@ export class WorkerAssist extends Assist {
 
     public async endSyncUserUpdate() {
         await DB.user.update(this.context.user.id, {
-            workStartedAt: '',
             lastSyncStatus: '',
             isWork: false,
             syncbotId: null,
-            lastCalendarSync: this.context.referenceTime,
+            lastCalendarSync: this.context.period.end,
         });
     }
 

@@ -249,6 +249,19 @@ export class NotionAssistApi {
                                     this.context.user.notionWorkspace.botId,
                             },
                         },
+                        {
+                            timestamp: 'last_edited_time',
+                            last_edited_time: {
+                                on_or_after:
+                                    this.context.period.start.toISOString(),
+                            },
+                        },
+                        {
+                            timestamp: 'last_edited_time',
+                            last_edited_time: {
+                                before: this.context.period.end.toISOString(),
+                            },
+                        },
                     ],
                 },
             });

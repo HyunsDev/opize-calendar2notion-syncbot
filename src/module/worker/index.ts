@@ -1,8 +1,8 @@
-import dayjs from 'dayjs';
 import { Not } from 'typeorm';
 
 import { DB } from '@/database';
 import { workerLogger } from '@/logger/winston';
+import { timeout } from '@/utils';
 
 import { bot } from '../bot';
 
@@ -15,7 +15,6 @@ import {
 import { WorkContext } from './context/work.context';
 import { workerExceptionFilter } from './exception/exceptionFilter';
 import { WorkerResult } from './types/result';
-import { timeout } from '@/utils';
 
 export class Worker {
     context: WorkContext;
@@ -37,6 +36,10 @@ export class Worker {
 
     async run(): Promise<WorkerResult> {
         this.context.setUser(await this.getTargetUser());
+        this.debugLog(
+            `period: ${this.context.period.start.toISOString()} ~ ${this.context.period.end.toISOString()}`,
+        );
+
         await workerExceptionFilter(
             async () => await timeout(this.runSteps(), bot.syncBot.timeout),
             this.context,
@@ -109,7 +112,13 @@ export class Worker {
     private async validation() {
         this.debugLog('STEP: validation');
         this.context.result.step = 'validation';
-        await this.workerAssist.validationAndRestore();
+
+        if (this.context.period.start >= this.context.period.end) {
+            throw new Error('Invalid period');
+        }
+
+        await this.notionAssist.validationAndRestore();
+        await this.googleCalendarAssist.validation();
     }
 
     // 제거된 페이지 삭제
@@ -123,7 +132,7 @@ export class Worker {
 
     // 동기화
     private async syncEvents() {
-        this.debugLog('STEP: validation');
+        this.debugLog('STEP: syncEvents');
         this.context.result.step = 'syncEvents';
 
         const updatedPages = await this.notionAssist.getUpdatedPages();
@@ -144,6 +153,7 @@ export class Worker {
 
     // 새로운 캘린더 연결
     private async syncNewCalendars() {
+        this.debugLog('STEP: syncNewCalendar');
         this.context.result.step = 'syncNewCalendar';
 
         const newCalendars = this.context.calendars.filter(
@@ -152,11 +162,15 @@ export class Worker {
 
         for (const newCalendar of newCalendars) {
             await this.workerAssist.syncNewCalendar(newCalendar);
+            this.debugLog(
+                `새로운 캘린더 연결: ${newCalendar.googleCalendarName}`,
+            );
         }
     }
 
     // 계정 초기 세팅
     private async initAccount() {
+        this.debugLog('STEP: initAccount');
         this.context.result.step = 'initAccount';
 
         const newCalendars = this.context.calendars.filter(
@@ -170,6 +184,7 @@ export class Worker {
 
     // 작업 종료
     private async endSync() {
+        this.debugLog('STEP: endSync');
         this.context.result.step = 'endSync';
 
         await this.workerAssist.endSyncUserUpdate();

@@ -5,7 +5,6 @@ import utc from 'dayjs/plugin/utc';
 import { IsNull, LessThan } from 'typeorm';
 
 import { DB } from '@/database';
-import { runnerLogger } from '@/logger/winston';
 
 import { bot } from '../bot';
 
@@ -35,9 +34,8 @@ export class RunnerService {
                 isWork: false,
                 isConnected: true,
                 userPlan: plan,
-                lastCalendarSync: LessThan(
-                    dayjs().tz('Asia/Seoul').add(-1, 'minute').toDate(),
-                ),
+                lastCalendarSync: LessThan(dayjs().add(-1, 'minute').toDate()),
+                workStartedAt: LessThan(dayjs().add(-1, 'minute').toDate()),
             },
             order: {
                 lastCalendarSync: {
