@@ -60,12 +60,12 @@ export class EventLinkAssist {
     }
 
     public async updateLastNotionUpdate(eventLink: EventEntity) {
-        eventLink.lastNotionUpdate = new Date();
+        eventLink.lastNotionUpdate = this.context.period.end;
         return await DB.event.save(eventLink);
     }
 
     public async updateLastGCalUpdate(eventLink: EventEntity) {
-        eventLink.lastGoogleCalendarUpdate = new Date();
+        eventLink.lastGoogleCalendarUpdate = this.context.period.end;
         return await DB.event.save(eventLink);
     }
 
@@ -73,8 +73,8 @@ export class EventLinkAssist {
         const eventLink = EventEntity.create({
             googleCalendarEventId: event.googleCalendarEventId,
             googleCalendarCalendarId: event.calendar.googleCalendarId,
-            lastGoogleCalendarUpdate: new Date(),
-            lastNotionUpdate: new Date(),
+            lastGoogleCalendarUpdate: this.context.period.end,
+            lastNotionUpdate: this.context.period.end,
             status: 'SYNCED',
             willRemove: false,
             notionPageId: event.notionPageId,

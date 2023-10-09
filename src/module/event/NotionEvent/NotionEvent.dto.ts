@@ -65,7 +65,7 @@ export class NotionEventDto extends ProtoEvent {
             notionPageId: event.notionPageId,
 
             title: event.title,
-            isDeleted: event.status === 'confirmed',
+            isDeleted: event.status === 'cancelled',
             location: event.location,
             description: event.description,
             date: NotionEventDto.convertDateFromEvent(event.date),
@@ -125,7 +125,7 @@ export class NotionEventDto extends ProtoEvent {
             calendar: this.calendar,
 
             title: this.title,
-            status: this.isDeleted ? 'confirmed' : 'cancelled',
+            status: this.isDeleted ? 'cancelled' : 'confirmed',
             location: this.location,
             description: this.description,
             date: NotionEventDto.convertDateToEvent(this.date),

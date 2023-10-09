@@ -24,8 +24,9 @@
         "winston-daily-rotate-file": "^4.7.1"
     },
     "scripts": {
+        "cli": "ts-node -r tsconfig-paths/register ./src/cli/index.ts",
         "dev": "ts-node -r tsconfig-paths/register ./src/main.ts",
-        "test": "jest --detectOpenHandles",
+        "test": "ts-node -r tsconfig-paths/register ./src/test/test.ts",
         "build": "rm -rf dist && tsc -p tsconfig.json && tsc-alias",
         "lint": "eslint \"{src,apps,libs}/**/*.ts\" --fix",
         "docker:build": "docker buildx build --platform linux/amd64,linux/arm64/v8 -t opize/opize-calendar2notion-syncbot:latest . --push",
@@ -33,6 +34,7 @@
         "docker:start": "docker stop opize-calendar2notion-syncbot || true && docker rm opize-calendar2notion-syncbot || true && yarn docker:pull && docker run -it -d --env-file .env --name opize-calendar2notion-syncbot --network host opize/opize-calendar2notion-syncbot:latest"
     },
     "devDependencies": {
+        "@types/cli-progress": "^3.11.3",
         "@types/cors": "^2.8.12",
         "@types/express": "^4.17.14",
         "@types/jest": "^29.2.0",
@@ -41,6 +43,8 @@
         "@types/uuid": "^8.3.4",
         "@typescript-eslint/eslint-plugin": "^6.0.0",
         "@typescript-eslint/parser": "^6.0.0",
+        "chalk": "^4.1.2",
+        "cli-progress": "^3.12.0",
         "eslint": "^8.45.0",
         "eslint-config-prettier": "^9.0.0",
         "eslint-plugin-import": "^2.28.1",

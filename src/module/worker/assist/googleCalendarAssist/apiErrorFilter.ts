@@ -36,6 +36,7 @@ export async function googleCalendarAPIErrorFilter<T>(
                 await filterRule.callback(err, context, args);
             }
         } else {
+            console.error(err);
         }
     }
 }

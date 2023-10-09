@@ -137,6 +137,7 @@ export class GoogleCalendarAssistApi {
                 nextCursor: res.data.nextPageToken,
             };
         });
+
         return res
             .filter((e) => new Date(e.updated) < this.context.period.end)
             .map((event) =>
@@ -247,6 +248,7 @@ export class GoogleCalendarAssistApi {
                 ],
             },
         });
+
         return GoogleCalendarEventDto.fromGoogleCalendar(
             res.data,
             event.calendar,
@@ -282,7 +284,7 @@ export class GoogleCalendarAssistApi {
                 (attachment) =>
                     attachment.fileUrl !==
                     `https://www.notion.so/${event.notionPageId}`,
-            );
+            ) || [];
 
         const notionAttachment =
             existEvent.originalGoogleCalendarEvent.attachments?.find(

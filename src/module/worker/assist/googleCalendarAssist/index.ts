@@ -45,16 +45,16 @@ export class GoogleCalendarAssist extends Assist {
     }
 
     public async getUpdatedEvents() {
-        const res: GoogleCalendarEventDto[] = [];
+        const events: GoogleCalendarEventDto[] = [];
         for (const calendar of this.context.connectedCalendars) {
             const res = await this.api.getUpdatedEventsByCalendar(calendar);
-            res.push(...res);
+            events.push(...res);
         }
 
         this.context.result.syncEvents.gCalCalendarCount =
             this.context.connectedCalendars.length;
-        this.context.result.syncEvents.gCal2NotionCount = res.length;
-        return res;
+        this.context.result.syncEvents.gCal2NotionCount = events.length;
+        return events;
     }
 
     public async CUDEvent(notionEvent: NotionEventDto) {
@@ -68,11 +68,27 @@ export class GoogleCalendarAssist extends Assist {
         if (!event.calendar || event.calendar.accessRole === 'reader') return;
 
         if (eventLink && eventLink.googleCalendarEventId) {
-            const newEvent = await this.api.createEvent(
-                GoogleCalendarEventDto.fromEvent(event),
-            );
-            await this.eventLinkAssist.create(event.merge(newEvent.toEvent()));
+            event.eventId = eventLink.id;
+            event.googleCalendarEventId = eventLink.googleCalendarEventId;
+
+            console.log(`\n==========[ UPDATE EVENT]==============`);
+            console.log(event);
+            console.log('');
+            console.log(eventLink);
+            console.log('');
+            console.log(GoogleCalendarEventDto.fromEvent(event));
+            console.log(`=========================================\n`);
+
+            await this.api.updateEvent(GoogleCalendarEventDto.fromEvent(event));
+            await this.eventLinkAssist.updateLastGCalUpdate(eventLink);
             return;
         }
+
+        const newEvent = await this.api.createEvent(
+            GoogleCalendarEventDto.fromEvent(event),
+        );
+
+        await this.eventLinkAssist.create(event.merge(newEvent.toEvent()));
+        return;
     }
 }

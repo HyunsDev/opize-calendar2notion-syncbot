@@ -35,10 +35,12 @@ export class Worker {
     }
 
     async run(): Promise<WorkerResult> {
-        this.context.setUser(await this.getTargetUser());
-        this.debugLog(
-            `period: ${this.context.period.start.toISOString()} ~ ${this.context.period.end.toISOString()}`,
-        );
+        const user = await this.getTargetUser();
+        if (!user) {
+            throw new Error('유저를 찾을 수 없습니다.');
+        }
+
+        this.context.setUser(user);
 
         await workerExceptionFilter(
             async () => await timeout(this.runSteps(), bot.syncBot.timeout),
@@ -51,7 +53,12 @@ export class Worker {
     private async runSteps() {
         await this.init();
         await this.startSync();
-        await this.validation();
+        const res = await this.validation();
+
+        if (res.skip) {
+            await this.endSync();
+            return;
+        }
 
         if (this.isUserInitialized()) {
             await this.eraseDeletedEvent();
@@ -73,6 +80,9 @@ export class Worker {
      */
     private async init() {
         this.debugLog('STEP: init');
+        this.debugLog(
+            `period: ${this.context.period.start.toISOString()} ~ ${this.context.period.end.toISOString()}`,
+        );
 
         const calendars = await this.getUserCalendar();
         this.context.setCalendars(calendars);
@@ -105,6 +115,7 @@ export class Worker {
     private async startSync() {
         this.debugLog('STEP: startSync');
         this.context.result.step = 'startSync';
+
         await this.workerAssist.startSyncUserUpdate();
     }
 
@@ -114,11 +125,16 @@ export class Worker {
         this.context.result.step = 'validation';
 
         if (this.context.period.start >= this.context.period.end) {
-            throw new Error('Invalid period');
+            return {
+                skip: true,
+            };
         }
 
         await this.notionAssist.validationAndRestore();
         await this.googleCalendarAssist.validation();
+        return {
+            skip: false,
+        };
     }
 
     // 제거된 페이지 삭제
@@ -127,7 +143,14 @@ export class Worker {
         this.context.result.step = 'eraseDeletedEvent';
 
         await this.workerAssist.eraseDeletedNotionPage();
+        this.debugLog(
+            `eraseDeletedNotionPage: ${this.context.result.eraseDeletedEvent.notion}개`,
+        );
+
         await this.workerAssist.eraseDeletedEventLink();
+        this.debugLog(
+            `eraseDeletedNotionPage: ${this.context.result.eraseDeletedEvent.eventLink}개`,
+        );
     }
 
     // 동기화

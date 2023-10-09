@@ -146,6 +146,7 @@ export class NotionAssistApi {
     @NotionAPI('page')
     async createPage(event: NotionEventDto) {
         const props = this.context.user.parsedNotionProps;
+
         const res = await this.client.pages.create({
             parent: {
                 type: 'database_id',
@@ -175,7 +176,7 @@ export class NotionAssistApi {
                 },
                 [props.link]: {
                     type: 'url',
-                    url: event.googleCalendarEventLink,
+                    url: event.googleCalendarEventLink || null,
                 },
                 [props.description]: {
                     type: 'rich_text',
@@ -271,13 +272,18 @@ export class NotionAssistApi {
             };
         });
 
-        return result.map((page: PageObjectResponse) =>
-            NotionEventDto.fromNotionEvent(
-                page,
-                this.getCalendarByPageObject(page),
-                props,
-            ),
-        );
+        return result
+            .filter(
+                (page: PageObjectResponse) =>
+                    new Date(page.last_edited_time) < this.context.period.end,
+            )
+            .map((page: PageObjectResponse) =>
+                NotionEventDto.fromNotionEvent(
+                    page,
+                    this.getCalendarByPageObject(page),
+                    props,
+                ),
+            );
     }
 
     @NotionAPI('page')
@@ -364,7 +370,7 @@ export class NotionAssistApi {
                 },
                 [props.link]: {
                     type: 'url',
-                    url: event.googleCalendarEventLink,
+                    url: event.googleCalendarEventLink || null,
                 },
                 [props.description]: {
                     type: 'rich_text',

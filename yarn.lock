@@ -774,6 +774,13 @@
     "@types/connect" "*"
     "@types/node" "*"
 
+"@types/cli-progress@^3.11.3":
+  version "3.11.3"
+  resolved "https://registry.yarnpkg.com/@types/cli-progress/-/cli-progress-3.11.3.tgz#2a982d4c68fb288048daa0b3293c0ce81c1785ee"
+  integrity sha512-/+C9xAdVtc+g5yHHkGBThgAA8rYpi5B+2ve3wLtybYj0JHEBs57ivR4x/zGfSsplRnV+psE91Nfin1soNKqz5Q==
+  dependencies:
+    "@types/node" "*"
+
 "@types/connect@*":
   version "3.4.36"
   resolved "https://registry.yarnpkg.com/@types/connect/-/connect-3.4.36.tgz#e511558c15a39cb29bd5357eebb57bd1459cd1ab"
@@ -1550,6 +1557,13 @@ cli-highlight@^2.1.11:
     parse5 "^5.1.1"
     parse5-htmlparser2-tree-adapter "^6.0.0"
     yargs "^16.0.0"
+
+cli-progress@^3.12.0:
+  version "3.12.0"
+  resolved "https://registry.yarnpkg.com/cli-progress/-/cli-progress-3.12.0.tgz#807ee14b66bcc086258e444ad0f19e7d42577942"
+  integrity sha512-tRkV3HJ1ASwm19THiiLIXLO7Im7wlTuKnvkYaTkyoAPefqjNg7W7DHKUlGRxy9vxDvbyCYQkQozvptuMkGCg8A==
+  dependencies:
+    string-width "^4.2.3"
 
 cliui@^7.0.2:
   version "7.0.4"

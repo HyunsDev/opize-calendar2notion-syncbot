@@ -80,7 +80,7 @@ export class GoogleCalendarEventDto extends ProtoEvent {
             summary: originalEvent.summary,
             location: originalEvent.location,
             description: originalEvent.description,
-            googleCalendarEventLink: originalEvent.htmlLink,
+            googleCalendarEventLink: originalEvent.htmlLink || '',
 
             originalGoogleCalendarEvent: originalEvent,
         });

@@ -117,6 +117,9 @@ export class NotionAssist extends Assist {
         );
 
         if (eventLink && eventLink.notionPageId) {
+            event.googleCalendarEventId = eventLink.googleCalendarEventId;
+            event.notionPageId = eventLink.notionPageId;
+
             if (event.status === 'cancelled') {
                 await this.deletePage(event.notionPageId);
                 return;
