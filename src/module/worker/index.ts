@@ -80,9 +80,12 @@ export class Worker {
      */
     private async init() {
         this.debugLog('STEP: init');
-        this.debugLog(
-            `period: ${this.context.period.start.toISOString()} ~ ${this.context.period.end.toISOString()}`,
-        );
+
+        if (this.context.user.lastCalendarSync) {
+            this.debugLog(
+                `period: ${this.context.period.start.toISOString()} ~ ${this.context.period.end.toISOString()}`,
+            );
+        }
 
         const calendars = await this.getUserCalendar();
         this.context.setCalendars(calendars);
@@ -149,7 +152,7 @@ export class Worker {
 
         await this.workerAssist.eraseDeletedEventLink();
         this.debugLog(
-            `eraseDeletedNotionPage: ${this.context.result.eraseDeletedEvent.eventLink}개`,
+            `eraseDeletedEventLink: ${this.context.result.eraseDeletedEvent.eventLink}개`,
         );
     }
 

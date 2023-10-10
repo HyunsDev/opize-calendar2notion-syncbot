@@ -60,11 +60,11 @@ export abstract class TestCase {
         await this.validate(result);
 
         if (this.result.length === 0) {
-            console.log(`${chalk.bgGreen(' PASS ')} ${this.name}`);
+            console.log(`    ${chalk.bgGreen(' PASS ')} ${this.name}`);
         } else {
-            console.log(`${chalk.bgRed(' FAIL ')} ${this.name}`);
+            console.log(`    ${chalk.bgRed(' FAIL ')} ${this.name}`);
             this.result.forEach((message) => {
-                console.log(`    ❌ ${chalk.gray(message)}`);
+                console.log(`        ❌ ${chalk.gray(message)}`);
             });
         }
         console.log('');

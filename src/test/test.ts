@@ -52,7 +52,6 @@ class WorkerTest {
         }
 
         console.log(chalk.bgWhite.black(` TEST `) + ` ${user.name}`);
-
         console.log(
             `    ${chalk.gray('User ID'.padEnd(12, ' '))} ${this.ctx.user.id}`,
         );
@@ -92,9 +91,9 @@ class WorkerTest {
 
         log.desc('Finished'.padEnd(12, ' '), false);
         for (const Case of this.cases) {
+            await sleep(1000);
             await Case.init();
             process.stdout.write(`${chalk.white(Case.name)} `);
-            await sleep(1000);
         }
         console.log('');
 
@@ -106,9 +105,9 @@ class WorkerTest {
 
         log.desc('Finished'.padEnd(12, ' '), false);
         for (const Case of this.cases) {
+            await sleep(1000);
             await Case.work();
             process.stdout.write(`${chalk.white(Case.name)} `);
-            await sleep(1000);
         }
         console.log('');
 
@@ -126,9 +125,9 @@ class WorkerTest {
 
         log.desc('Finished'.padEnd(12, ' '), false);
         for (const Case of this.cases) {
+            await sleep(1000);
             await Case.cleanUp();
             process.stdout.write(`${chalk.white(Case.name)} `);
-            await sleep(1000);
         }
         console.log('');
 

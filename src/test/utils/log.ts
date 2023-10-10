@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 
 const stepLog = (step: string) => {
-    console.log(`${chalk.bgBlackBright(' STEP ')} ${step}`);
+    console.log(`\n${chalk.bgBlackBright(' STEP ')} ${step}`);
 };
 
 const runLog = (name: string, message: string) => {

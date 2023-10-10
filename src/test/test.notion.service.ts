@@ -40,9 +40,7 @@ export class TestNotionService {
 
     private getNotionClient() {
         return new Client({
-            auth:
-                this.ctx.user.notionWorkspace?.accessToken ||
-                this.ctx.user.notionAccessToken,
+            auth: process.env.TEST_BOT_2_TOKEN,
         });
     }
 

@@ -246,7 +246,7 @@ export class NotionAssistApi {
                         {
                             property: props.last_edited_by,
                             people: {
-                                contains:
+                                does_not_contain:
                                     this.context.user.notionWorkspace.botId,
                             },
                         },

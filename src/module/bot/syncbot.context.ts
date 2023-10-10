@@ -1,5 +1,7 @@
 import { env } from '@/env/env';
 
+import packageJson from '@/../package.json';
+
 export class SyncBotContext {
     readonly prefix: string;
     readonly startedAt: Date;
@@ -17,12 +19,12 @@ export class SyncBotContext {
     constructor() {
         this.prefix = env.SYNCBOT_PREFIX;
         this.startedAt = new Date();
-        this.version = process.env.npm_package_version;
+        this.version = packageJson.version;
         this.workerAmount = {
-            init: 2,
-            pro: 2,
-            free: 2,
-            sponsor: 2,
+            init: 5,
+            pro: 10,
+            free: 10,
+            sponsor: 0,
         };
         this.timeout = 1000 * 60 * 60;
         this.stop = false;

@@ -36,8 +36,6 @@ export class G2NEditCase extends TestCase {
             eventLink.notionPageId,
         );
 
-        this.log(`페이지: ${notionPage?.id || '(찾을 수 없음)'}`);
-
         this.expect(result.fail, false);
         this.expect(result.syncEvents.gCal2NotionCount > 0, true);
         this.expect(notionPage?.id, EXPECTED_RULE.NOT_NULL);

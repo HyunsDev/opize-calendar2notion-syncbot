@@ -29,8 +29,6 @@ export class N2GEditCase extends TestCase {
             eventLink.googleCalendarEventId,
         );
 
-        this.log(`페이지: ${gcalEvent?.data?.id || '(찾을 수 없음)'}`);
-
         this.expect(result.fail, false);
         this.expect(result.syncEvents.notion2GCalCount > 0, true);
 

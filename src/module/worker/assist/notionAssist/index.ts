@@ -138,6 +138,7 @@ export class NotionAssist extends Assist {
             await this.api.updatePage(NotionEventDto.fromEvent(event));
         } else {
             if (event.status === 'cancelled') return;
+
             const newEvent = await this.api.createPage(
                 NotionEventDto.fromEvent(event),
             );

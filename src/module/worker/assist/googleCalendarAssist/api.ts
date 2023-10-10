@@ -221,6 +221,7 @@ export class GoogleCalendarAssistApi {
     ): Promise<GoogleCalendarEventDto> {
         const res = await this.client.events.insert({
             calendarId: event.calendar.googleCalendarId,
+            supportsAttachments: true,
             requestBody: {
                 start: event.date.start,
                 end: event.date.end,
@@ -240,7 +241,10 @@ export class GoogleCalendarAssistApi {
                 // Google Calendar에 Notion Event를 첨부하기 위한 attachments
                 attachments: [
                     {
-                        fileUrl: `https://www.notion.so/${event.notionPageId}`,
+                        fileUrl: `https://www.notion.so/${event.notionPageId.replaceAll(
+                            '-',
+                            '',
+                        )}`,
                         title: event.summary,
                         iconLink:
                             'https://lh3.googleusercontent.com/pw/AJFCJaU8wzEWMXWYp2glnlt4vX9rdN3h4KJGpgu6zshkAEPSohFfttbcfQh_TJf1LqOwuoWvBQaVZaShLmbFfIUaZlu-kAkaeLkQSKTrMHUoIDviYIbizCzOIOwp-g2Wl6amU0LuYxkqO9kLcOe-L4o_qEg=w32-h32-s-no?authuser=0',
@@ -283,16 +287,25 @@ export class GoogleCalendarAssistApi {
             existEvent.originalGoogleCalendarEvent.attachments?.filter(
                 (attachment) =>
                     attachment.fileUrl !==
-                    `https://www.notion.so/${event.notionPageId}`,
+                    `https://www.notion.so/${event.notionPageId.replaceAll(
+                        '-',
+                        '',
+                    )}`,
             ) || [];
 
         const notionAttachment =
             existEvent.originalGoogleCalendarEvent.attachments?.find(
                 (attachment) =>
                     attachment.fileUrl ===
-                    `https://www.notion.so/${event.notionPageId}`,
+                    `https://www.notion.so/${event.notionPageId.replaceAll(
+                        '-',
+                        '',
+                    )}`,
             ) || {
-                fileUrl: `https://www.notion.so/${event.notionPageId}`,
+                fileUrl: `https://www.notion.so/${event.notionPageId.replaceAll(
+                    '-',
+                    '',
+                )}`,
                 title: event.summary,
                 iconLink:
                     'https://lh3.googleusercontent.com/pw/AJFCJaU8wzEWMXWYp2glnlt4vX9rdN3h4KJGpgu6zshkAEPSohFfttbcfQh_TJf1LqOwuoWvBQaVZaShLmbFfIUaZlu-kAkaeLkQSKTrMHUoIDviYIbizCzOIOwp-g2Wl6amU0LuYxkqO9kLcOe-L4o_qEg=w32-h32-s-no?authuser=0',
@@ -302,6 +315,7 @@ export class GoogleCalendarAssistApi {
         const res = await this.client.events.update({
             calendarId: event.calendar.googleCalendarId,
             eventId: event.googleCalendarEventId,
+            supportsAttachments: true,
             requestBody: {
                 start: event.date.start,
                 end: event.date.end,

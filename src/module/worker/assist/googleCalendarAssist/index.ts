@@ -71,14 +71,6 @@ export class GoogleCalendarAssist extends Assist {
             event.eventId = eventLink.id;
             event.googleCalendarEventId = eventLink.googleCalendarEventId;
 
-            console.log(`\n==========[ UPDATE EVENT]==============`);
-            console.log(event);
-            console.log('');
-            console.log(eventLink);
-            console.log('');
-            console.log(GoogleCalendarEventDto.fromEvent(event));
-            console.log(`=========================================\n`);
-
             await this.api.updateEvent(GoogleCalendarEventDto.fromEvent(event));
             await this.eventLinkAssist.updateLastGCalUpdate(eventLink);
             return;

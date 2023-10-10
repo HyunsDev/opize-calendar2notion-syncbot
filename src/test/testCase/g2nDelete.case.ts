@@ -1,3 +1,4 @@
+import { PageObjectResponse } from '@notionhq/client/build/src/api-endpoints';
 import { EventEntity } from '@opize/calendar2notion-object';
 import { calendar_v3 } from 'googleapis';
 
@@ -15,12 +16,13 @@ export class G2NDeleteCase extends TestCase {
         this.gCalEvent = (
             await this.ctx.gcal.createTestGoogleCalendarEvent(title)
         ).data;
-        this.eventLink = await this.ctx.service.getEventLinkFromGoogleEventId(
-            this.gCalEvent.id,
-        );
     }
 
     async work() {
+        this.eventLink = await this.ctx.service.getEventLinkFromGoogleEventId(
+            this.gCalEvent.id,
+        );
+
         await this.ctx.gcal.deleteEvent(this.gCalEvent.id);
     }
 
@@ -36,7 +38,7 @@ export class G2NDeleteCase extends TestCase {
 
         this.expect(result.fail, false);
         this.expect(result.syncEvents.gCal2NotionCount > 0, true);
-        this.expect(notionPage?.id, EXPECTED_RULE.NULL);
+        this.expect((notionPage as PageObjectResponse).archived, true);
     }
 
     async cleanUp() {}

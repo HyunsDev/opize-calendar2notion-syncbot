@@ -31,7 +31,8 @@ export async function notionAPIErrorFilter<T>(
         );
 
         if (filterRule) {
-            await filterRule?.callback(err, context, args);
+            filterRule.callback &&
+                (await filterRule?.callback(err, context, args));
         }
     }
 }
