@@ -96,16 +96,26 @@ export class Worker {
 
         this.notionAssist = new NotionAssist({
             context: this.context,
-            eventLinkAssist: this.eventLinkAssist,
         });
 
         this.googleCalendarAssist = new GoogleCalendarAssist({
             context: this.context,
-            eventLinkAssist: this.eventLinkAssist,
         });
 
         this.workerAssist = new WorkerAssist({
             context: this.context,
+        });
+
+        this.eventLinkAssist.dependencyInjection({});
+        this.notionAssist.dependencyInjection({
+            eventLinkAssist: this.eventLinkAssist,
+            googleCalendarAssist: this.googleCalendarAssist,
+        });
+        this.googleCalendarAssist.dependencyInjection({
+            eventLinkAssist: this.eventLinkAssist,
+            notionAssist: this.notionAssist,
+        });
+        this.workerAssist.dependencyInjection({
             eventLinkAssist: this.eventLinkAssist,
             googleCalendarAssist: this.googleCalendarAssist,
             notionAssist: this.notionAssist,

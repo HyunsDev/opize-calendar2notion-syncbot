@@ -5,6 +5,7 @@ import { GoogleCalendarEventDto, NotionEventDto } from '@/module/event';
 import { WorkContext } from '../../context/work.context';
 import { Assist } from '../../types/assist';
 import { EventLinkAssist } from '../eventLinkAssist';
+import { NotionAssist } from '../notionAssist';
 
 import { GoogleCalendarAssistApi } from './api';
 
@@ -12,22 +13,29 @@ export class GoogleCalendarAssist extends Assist {
     private context: WorkContext;
 
     private eventLinkAssist: EventLinkAssist;
+    private notionAssist: NotionAssist;
+
     private api: GoogleCalendarAssistApi;
 
-    constructor({
-        context,
-        eventLinkAssist,
-    }: {
-        context: WorkContext;
-        eventLinkAssist: EventLinkAssist;
-    }) {
+    constructor({ context }: { context: WorkContext }) {
         super();
         this.context = context;
-        this.eventLinkAssist = eventLinkAssist;
         this.assistName = 'GoogleAssist';
         this.api = new GoogleCalendarAssistApi({
             context,
         });
+    }
+
+    public dependencyInjection({
+        eventLinkAssist,
+        notionAssist,
+    }: {
+        eventLinkAssist: EventLinkAssist;
+        notionAssist: NotionAssist;
+    }) {
+        this.eventLinkAssist = eventLinkAssist;
+        this.notionAssist = notionAssist;
+        return;
     }
 
     public async validation() {
@@ -54,13 +62,21 @@ export class GoogleCalendarAssist extends Assist {
         this.context.result.syncEvents.gCalCalendarCount =
             this.context.connectedCalendars.length;
         this.context.result.syncEvents.gCal2NotionCount = events.length;
+
         return events;
+    }
+
+    public async updateEvent(notionEvent: NotionEventDto) {
+        const event = notionEvent.toEvent();
+        return await this.api.updateEvent(
+            GoogleCalendarEventDto.fromEvent(event),
+        );
     }
 
     public async CUDEvent(notionEvent: NotionEventDto) {
         const event = notionEvent.toEvent();
 
-        const eventLink = await this.eventLinkAssist.findByNotionPageId(
+        let eventLink = await this.eventLinkAssist.findByNotionPageId(
             event.notionPageId,
         );
 
@@ -79,8 +95,14 @@ export class GoogleCalendarAssist extends Assist {
         const newEvent = await this.api.createEvent(
             GoogleCalendarEventDto.fromEvent(event),
         );
+        eventLink = await this.eventLinkAssist.create(
+            event.merge(newEvent.toEvent()),
+        );
 
-        await this.eventLinkAssist.create(event.merge(newEvent.toEvent()));
+        newEvent.notionPageId = eventLink.notionPageId;
+        newEvent.calendar.googleCalendarId = eventLink.googleCalendarCalendarId;
+        await this.notionAssist.updatePage(newEvent);
+
         return;
     }
 }

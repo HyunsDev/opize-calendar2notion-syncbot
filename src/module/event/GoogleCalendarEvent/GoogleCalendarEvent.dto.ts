@@ -34,6 +34,7 @@ export class GoogleCalendarEventDto extends ProtoEvent {
         this.location = data.location;
         this.description = data.description;
         this.date = data.date;
+        this.googleCalendarEventLink = data.googleCalendarEventLink;
     }
 
     static fromEvent(event: EventDto): GoogleCalendarEventDto {

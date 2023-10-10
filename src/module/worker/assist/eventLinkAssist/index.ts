@@ -4,12 +4,18 @@ import { DB } from '@/database';
 import { EventDto } from '@/module/event';
 
 import { WorkContext } from '../../context/work.context';
+import { Assist } from '../../types/assist';
 
-export class EventLinkAssist {
+export class EventLinkAssist extends Assist {
     context: WorkContext;
 
     constructor({ context }: { context: WorkContext }) {
+        super();
         this.context = context;
+    }
+
+    public dependencyInjection({}) {
+        return;
     }
 
     public async findByNotionPageId(pageId: string) {
@@ -70,7 +76,7 @@ export class EventLinkAssist {
     }
 
     public async create(event: EventDto) {
-        const eventLink = EventEntity.create({
+        let eventLink = EventEntity.create({
             googleCalendarEventId: event.googleCalendarEventId,
             googleCalendarCalendarId: event.calendar.googleCalendarId,
             lastGoogleCalendarUpdate: this.context.period.end,
@@ -81,6 +87,7 @@ export class EventLinkAssist {
             calendar: event.calendar,
             user: this.context.user,
         });
-        await DB.event.save(eventLink);
+        eventLink = await DB.event.save(eventLink);
+        return eventLink;
     }
 }

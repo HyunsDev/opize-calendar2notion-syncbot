@@ -17,23 +17,25 @@ export class WorkerAssist extends Assist {
     private googleCalendarAssist: GoogleCalendarAssist;
     private notionAssist: NotionAssist;
 
-    constructor({
-        context,
+    constructor({ context }: { context: WorkContext }) {
+        super();
+        this.context = context;
+        this.assistName = 'WorkerAssist';
+    }
+
+    public dependencyInjection({
         eventLinkAssist,
         googleCalendarAssist,
         notionAssist,
     }: {
-        context: WorkContext;
         eventLinkAssist: EventLinkAssist;
         googleCalendarAssist: GoogleCalendarAssist;
         notionAssist: NotionAssist;
     }) {
-        super();
-        this.context = context;
         this.eventLinkAssist = eventLinkAssist;
         this.googleCalendarAssist = googleCalendarAssist;
         this.notionAssist = notionAssist;
-        this.assistName = 'WorkerAssist';
+        return;
     }
 
     public async eraseDeletedNotionPage() {
