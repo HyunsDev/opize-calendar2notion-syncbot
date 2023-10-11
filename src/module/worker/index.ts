@@ -215,6 +215,9 @@ export class Worker {
 
         for (const newCalendar of newCalendars) {
             await this.workerAssist.syncNewCalendar(newCalendar);
+            this.debugLog(
+                `새로운 캘린더 연결: ${newCalendar.googleCalendarName}`,
+            );
         }
     }
 

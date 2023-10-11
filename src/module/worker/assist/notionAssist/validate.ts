@@ -101,6 +101,8 @@ export class NotionValidation {
             [prop]: newProp.id,
         };
         this.context.user.notionProps = JSON.stringify(newProps);
-        this.context.user = await DB.user.save(this.context.user);
+        await DB.user.update(this.context.user, {
+            notionProps: this.context.user.notionProps,
+        });
     }
 }

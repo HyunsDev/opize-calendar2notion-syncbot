@@ -96,13 +96,6 @@ export class NotionAssist extends Assist {
         await this.api.deletePage(pageId);
     }
 
-    public async addPage(googleCalendarEvent: GoogleCalendarEventDto) {
-        const page = await this.api.createPage(
-            NotionEventDto.fromEvent(googleCalendarEvent.toEvent()),
-        );
-        return page;
-    }
-
     public async getUpdatedPages() {
         const updatedPages = await this.api.getUpdatedPages();
         this.context.result.syncEvents.notion2GCalCount = updatedPages.length;

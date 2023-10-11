@@ -154,7 +154,7 @@ export class UserLoop extends Loop {
                 continue;
             }
             await this.runWorker(user);
-            bot.report.initCount += 1;
+            bot.report.syncCount += 1;
         }
     }
 }

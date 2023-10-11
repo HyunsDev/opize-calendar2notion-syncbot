@@ -3,7 +3,6 @@ import dayjs from 'dayjs';
 import { LessThan } from 'typeorm';
 
 import { DB } from '@/database';
-import { GoogleCalendarEventDto } from '@/module/event';
 
 import { NotionAssist, EventLinkAssist, GoogleCalendarAssist } from '..';
 import PackageJSON from '../../../../../package.json';
@@ -77,12 +76,6 @@ export class WorkerAssist extends Assist {
         await this.eventLinkAssist.deleteEventLink(eventLink);
     }
 
-    public async addEventByGCal(event: GoogleCalendarEventDto) {
-        const page = await this.notionAssist.addPage(event);
-        await this.eventLinkAssist.create(event.toEvent());
-        return page;
-    }
-
     public async startSyncUserUpdate() {
         await DB.user.update(this.context.user.id, {
             workStartedAt: this.context.startedAt,
@@ -123,7 +116,7 @@ export class WorkerAssist extends Assist {
 
         await this.notionAssist.addCalendarProp(newCalendar);
         const events =
-            await this.googleCalendarAssist.getEventByCalendar(newCalendar);
+            await this.googleCalendarAssist.getEventsByCalendar(newCalendar);
 
         const calendar = await DB.calendar.findOne({
             where: {
@@ -131,7 +124,7 @@ export class WorkerAssist extends Assist {
             },
         });
         for (const event of events) {
-            await this.addEventByGCal(GoogleCalendarEventDto.fromEvent(event));
+            await this.notionAssist.CUDPage(event);
         }
 
         this.context.result.syncNewCalendar[`${calendar.id}`].eventCount =

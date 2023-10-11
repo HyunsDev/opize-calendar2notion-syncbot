@@ -46,10 +46,8 @@ export class GoogleCalendarAssist extends Assist {
         return await this.api.deleteEvent(eventId, calendarId);
     }
 
-    public async getEventByCalendar(calendar: CalendarEntity) {
-        return (await this.api.getEventsByCalendar(calendar)).map((event) =>
-            event.toEvent(),
-        );
+    public async getEventsByCalendar(calendar: CalendarEntity) {
+        return await this.api.getEventsByCalendar(calendar);
     }
 
     public async getUpdatedEvents() {
