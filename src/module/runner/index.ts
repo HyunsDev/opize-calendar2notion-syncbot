@@ -45,11 +45,13 @@ export class Runner {
         let i = 0;
         for (const [plan, amount] of workerAmount) {
             if (plan === 'init') {
-                loops.push(
-                    new InitUserLoop(
-                        `${process.env.SYNCBOT_PREFIX}_w_init_${i}`,
-                    ),
-                );
+                for (let i = 0; i < amount; i++) {
+                    loops.push(
+                        new InitUserLoop(
+                            `${process.env.SYNCBOT_PREFIX}_w_init_${i}`,
+                        ),
+                    );
+                }
             } else {
                 for (let i = 0; i < amount; i++) {
                     loops.push(
