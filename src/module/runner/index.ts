@@ -42,7 +42,6 @@ export class Runner {
         const workerAmount = Object.entries(bot.syncBot.workerAmount);
         const loops: Loop[] = [];
 
-        let i = 0;
         for (const [plan, amount] of workerAmount) {
             if (plan === 'init') {
                 for (let i = 0; i < amount; i++) {
@@ -62,7 +61,6 @@ export class Runner {
                     );
                 }
             }
-            i += 1;
         }
         return loops;
     }
