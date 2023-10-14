@@ -24,6 +24,7 @@
         "winston-daily-rotate-file": "^4.7.1"
     },
     "scripts": {
+        "start": "node dist/src/main.js",
         "cli": "ts-node -r tsconfig-paths/register ./src/cli/index.ts",
         "dev": "ts-node -r tsconfig-paths/register ./src/main.ts",
         "test": "ts-node -r tsconfig-paths/register ./src/test/test.ts",
@@ -31,7 +32,8 @@
         "lint": "eslint \"{src,apps,libs}/**/*.ts\" --fix",
         "docker:build": "docker buildx build --platform linux/amd64,linux/arm64/v8 -t opize/opize-calendar2notion-syncbot:latest . --push",
         "docker:pull": "docker pull opize/opize-calendar2notion-syncbot:latest",
-        "docker:start": "docker stop opize-calendar2notion-syncbot || true && docker rm opize-calendar2notion-syncbot || true && yarn docker:pull && docker run -it -d --env-file .env --name opize-calendar2notion-syncbot --network host opize/opize-calendar2notion-syncbot:latest"
+        "docker:rm": "docker stop opize-calendar2notion-syncbot || true && docker rm opize-calendar2notion-syncbot || true",
+        "docker:start": "yarn docker:rm && yarn docker:pull && docker run -it -d --env-file .env --name opize-calendar2notion-syncbot --network host opize/opize-calendar2notion-syncbot:latest"
     },
     "devDependencies": {
         "@types/cli-progress": "^3.11.3",
