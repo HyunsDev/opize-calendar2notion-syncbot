@@ -26,7 +26,7 @@ export const ADDABLE_REQUIRED_PROPS = [
     'description',
 ] as const;
 
-export const REQUIRED_NOTION_PROPS_MAP: Record<
+export const REQUIRED_PROPS_TYPE_MAP: Record<
     (typeof REQUIRED_PROPS)[number],
     NotionPropType
 > = {
@@ -40,7 +40,7 @@ export const REQUIRED_NOTION_PROPS_MAP: Record<
     last_edited_by: 'last_edited_by',
 } as const;
 
-export const ADDABLE_REQUIRED_NOTION_PROPS_MAP: Record<
+export const ADDABLE_REQUIRED_PROPS_TYPE_MAP: Record<
     (typeof ADDABLE_REQUIRED_PROPS)[number],
     'checkbox' | 'last_edited_by' | 'url' | 'rich_text'
 > = {
