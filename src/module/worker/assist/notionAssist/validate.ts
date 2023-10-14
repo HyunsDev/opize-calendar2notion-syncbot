@@ -7,9 +7,9 @@ import { WorkContext } from '../../context/work.context';
 
 import { NotionAssistApi } from './api';
 import {
-    ADDABLE_REQUIRED_NOTION_PROPS_MAP,
+    ADDABLE_REQUIRED_PROPS_TYPE_MAP,
     ADDABLE_REQUIRED_PROPS,
-    REQUIRED_NOTION_PROPS_MAP,
+    REQUIRED_PROPS_TYPE_MAP,
     REQUIRED_PROPS,
 } from './validate.constant';
 
@@ -78,13 +78,13 @@ export class NotionValidation {
             }
 
             if (
-                REQUIRED_NOTION_PROPS_MAP[userProp] &&
-                prop.type !== REQUIRED_NOTION_PROPS_MAP[userProp]
+                REQUIRED_PROPS_TYPE_MAP[userProp] &&
+                prop.type !== REQUIRED_PROPS_TYPE_MAP[userProp]
             ) {
                 // 정해진 타입과 일치하지 않음
                 this.errors.push({
                     error: 'wrong_prop_type',
-                    message: `${userProp} 속성의 유형이 올바르지 않습니다. (기대한 타입: ${REQUIRED_NOTION_PROPS_MAP[userProp]}, 실제 타입: ${prop.type})`,
+                    message: `${userProp} 속성의 유형이 올바르지 않습니다. (기대한 타입: ${REQUIRED_PROPS_TYPE_MAP[userProp]}, 실제 타입: ${prop.type})`,
                 });
                 continue;
             }
@@ -92,7 +92,7 @@ export class NotionValidation {
     }
 
     private async restoreProp(prop: (typeof ADDABLE_REQUIRED_PROPS)[number]) {
-        const propType = ADDABLE_REQUIRED_NOTION_PROPS_MAP[prop];
+        const propType = ADDABLE_REQUIRED_PROPS_TYPE_MAP[prop];
 
         const newProp = await this.api.addProp(prop, propType);
 
@@ -101,8 +101,14 @@ export class NotionValidation {
             [prop]: newProp.id,
         };
         this.context.user.notionProps = JSON.stringify(newProps);
-        await DB.user.update(this.context.user, {
-            notionProps: this.context.user.notionProps,
-        });
+
+        await DB.user.update(
+            {
+                id: this.context.user.id,
+            },
+            {
+                notionProps: JSON.stringify(newProps),
+            },
+        );
     }
 }
