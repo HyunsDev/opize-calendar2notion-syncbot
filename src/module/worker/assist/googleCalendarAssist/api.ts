@@ -229,15 +229,6 @@ export class GoogleCalendarAssistApi {
                 description: event.description,
                 location: event.location,
                 status: event.status,
-                // Cron과의 연결을 위한 extendedProperties
-                extendedProperties: {
-                    shared: {
-                        [`n.attchwsid.${event.notionPageId}`]:
-                            'bdcd90fd-4c12-4832-9caf-4fb21fc6c524',
-                        [`n.attchwsid.878025b813f54f1996ac4e985d3cd422`]:
-                            'bdcd90fd-4c12-4832-9caf-4fb21fc6c524',
-                    },
-                },
                 // Google Calendar에 Notion Event를 첨부하기 위한 attachments
                 attachments: [
                     {
@@ -268,41 +259,22 @@ export class GoogleCalendarAssistApi {
             event.calendar,
         );
 
-        const extendedProperties = {
-            shared: {
-                ...existEvent.originalGoogleCalendarEvent.extendedProperties
-                    ?.shared,
-                [`n.attchwsid.${event.notionPageId}`]:
-                    'bdcd90fd-4c12-4832-9caf-4fb21fc6c524',
-                [`n.attchwsid.878025b813f54f1996ac4e985d3cd422`]:
-                    'bdcd90fd-4c12-4832-9caf-4fb21fc6c524',
-            },
-            private: {
-                ...existEvent.originalGoogleCalendarEvent.extendedProperties
-                    ?.private,
-            },
-        };
-
         const attachmentsWithoutNotion =
             existEvent.originalGoogleCalendarEvent.attachments?.filter(
                 (attachment) =>
-                    attachment.fileUrl !==
-                    `https://www.notion.so/${event.notionPageId.replaceAll(
-                        '-',
-                        '',
-                    )}`,
+                    attachment.fileUrl.startsWith(
+                        'https://notion.so/calendar2notion/',
+                    ),
             ) || [];
 
         const notionAttachment =
             existEvent.originalGoogleCalendarEvent.attachments?.find(
                 (attachment) =>
-                    attachment.fileUrl ===
-                    `https://www.notion.so/${event.notionPageId.replaceAll(
-                        '-',
-                        '',
-                    )}`,
+                    attachment.fileUrl.startsWith(
+                        'https://notion.so/calendar2notion/',
+                    ),
             ) || {
-                fileUrl: `https://www.notion.so/${event.notionPageId.replaceAll(
+                fileUrl: `https://www.notion.so/calendar2notion/${event.notionPageId.replaceAll(
                     '-',
                     '',
                 )}`,
@@ -323,7 +295,6 @@ export class GoogleCalendarAssistApi {
                 description: event.description,
                 location: event.location,
                 status: event.status,
-                extendedProperties,
                 attachments: [...attachmentsWithoutNotion, notionAttachment],
             },
         });
