@@ -1,6 +1,10 @@
 import { PageObjectResponse } from '@notionhq/client/build/src/api-endpoints';
 import { CalendarEntity, UserNotionProps } from '@opize/calendar2notion-object';
 import dayjs from 'dayjs';
+import timezone from 'dayjs/plugin/timezone';
+import utc from 'dayjs/plugin/utc';
+dayjs.extend(timezone);
+dayjs.extend(utc);
 
 import { EventDateTime, EventDto } from '../Event';
 import {
@@ -183,9 +187,10 @@ export class NotionEventDto extends ProtoEvent {
             start:
                 'date' in eventDate.start
                     ? eventDate.start.date
-                    : eventDate.start.dateTime,
+                    : dayjs(eventDate.start.dateTime).utc().toISOString(),
             end: '',
         };
+        // const hasTime = 'dateTime' in eventDate.start;
 
         const start =
             'date' in eventDate.start
@@ -196,12 +201,12 @@ export class NotionEventDto extends ProtoEvent {
             date.end =
                 eventDate.end.date === eventDate.start.date
                     ? eventDate.end.date
-                    : dayjs(eventDate.end.date).toISOString().split('T')[0];
+                    : dayjs(eventDate.end.date).format('YYYY-MM-DD');
         } else if (
             'dateTime' in eventDate.start &&
             'dateTime' in eventDate.end
         ) {
-            date.end = eventDate.end.dateTime;
+            date.end = dayjs(eventDate.end.dateTime).utc().toISOString();
         } else {
             throw new Error('Invalid date');
         }
@@ -210,10 +215,12 @@ export class NotionEventDto extends ProtoEvent {
             return {
                 start: date.start,
                 end: date.end,
+                // time_zone: hasTime ? 'Asia/Seoul' : null,
             };
         } else {
             return {
                 start: date.start,
+                // time_zone: hasTime ? 'Asia/Seoul' : null,
             };
         }
     }
