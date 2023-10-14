@@ -2,8 +2,9 @@ import { ErrorLogEntity } from '@opize/calendar2notion-object';
 
 import { DB } from '@/database';
 import { webhook } from '@/logger/webhook';
-import { SyncError } from '../error/error';
+
 import { WorkContext } from '../context/work.context';
+import { SyncError } from '../error/error';
 import {
     getSyncFailEmbed,
     getUnknownSyncFailEmbed,

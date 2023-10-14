@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+
 import { env } from '@/env/env';
 
 export const authGuard = (req: Request, res: Response, next: NextFunction) => {

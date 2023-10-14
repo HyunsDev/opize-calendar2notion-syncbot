@@ -10,6 +10,7 @@ interface ErrorProps {
     code: valueof<typeof SyncErrorCode.googleCalendar.api>;
     user: UserEntity;
     err?: GaxiosError;
+    args: any[];
 }
 
 const ErrorMap: {
@@ -68,9 +69,8 @@ export class GoogleCalendarAPIError extends SyncError {
     constructor(props: ErrorProps) {
         super({
             code: props.code,
-            description: `${ErrorMap[props.code].message} - ${
-                props?.err?.response?.status
-            }`,
+            description: `${ErrorMap[props.code].message} - ${props?.err
+                ?.response?.status}`,
             user: props.user,
             from: 'GOOGLE CALENDAR',
             detail: JSON.stringify({

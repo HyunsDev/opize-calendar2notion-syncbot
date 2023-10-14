@@ -1,4 +1,5 @@
 import { Webhook } from '@hyunsdev/discord-webhook';
+
 import { env } from '@/env/env';
 
 const noticeWebhook = new Webhook(

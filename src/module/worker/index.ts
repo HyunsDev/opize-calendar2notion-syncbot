@@ -1,4 +1,11 @@
+import { Not } from 'typeorm';
+
 import { DB } from '@/database';
+import { workerLogger } from '@/logger/winston';
+import { timeout } from '@/utils';
+
+import { bot } from '../bot';
+
 import {
     EventLinkAssist,
     GoogleCalendarAssist,
@@ -6,17 +13,8 @@ import {
     WorkerAssist,
 } from './assist';
 import { WorkContext } from './context/work.context';
+import { workerExceptionFilter } from './exception/exceptionFilter';
 import { WorkerResult } from './types/result';
-import { Not } from 'typeorm';
-import {
-    isSyncError,
-    syncErrorFilter,
-    unknownErrorFilter,
-} from './exception/syncException';
-import { workerLogger } from '@/logger/winston';
-import { TimeoutError, timeout } from '@/utils';
-import { SyncTimeoutError } from './error/syncbot.error';
-import { context } from '../context';
 
 export class Worker {
     context: WorkContext;
@@ -26,73 +24,43 @@ export class Worker {
     eventLinkAssist: EventLinkAssist;
     workerAssist: WorkerAssist;
 
+    private debugLog(message: string) {
+        workerLogger.debug(
+            `[${this.context.workerId}:${this.context.user.id}] ${message}`,
+        );
+    }
+
     constructor(userId: number, workerId: string) {
-        this.context = new WorkContext(workerId, userId, new Date());
+        this.context = new WorkContext(workerId, userId);
     }
 
     async run(): Promise<WorkerResult> {
-        this.context.startedAt = new Date();
-        this.context.user = await DB.user.findOne({
-            where: {
-                id: this.context.userId,
-            },
-        });
-
-        try {
-            await this.runStepsWithTimeout();
-        } catch (err) {
-            try {
-                this.context.result.fail = true;
-
-                if (isSyncError(err)) {
-                    this.context.result.failReason = err.code;
-                    workerLogger.error(
-                        `[${this.context.workerId}:${this.context.user.id}] 문제가 발견되어 동기화에 실패하였습니다. (${err.code})`,
-                    );
-                    await syncErrorFilter(this.context, err);
-                } else {
-                    workerLogger.error(
-                        `[${this.context.workerId}:${this.context.user.id}] 동기화 과정 중 알 수 없는 오류가 발생하여 동기화에 실패하였습니다. \n[알 수 없는 오류 디버그 보고서]\nname: ${err.name}\nmessage: ${err.message}\nstack: ${err.stack}`,
-                    );
-                    await unknownErrorFilter(this.context, err);
-                }
-            } catch (err) {
-                workerLogger.error(
-                    `[${this.context.workerId}:${this.context.user.id}] **에러 필터 실패** 동기화 과정 중 알 수 없는 오류가 발생하여 동기화에 실패하였습니다. \n[알 수 없는 오류 디버그 보고서]\nname: ${err.name}\nmessage: ${err.message}\nstack: ${err.stack}`,
-                );
-                console.error('처리할 수 없는 에러');
-                console.log(err);
-            }
+        const user = await this.getTargetUser();
+        if (!user) {
+            throw new Error('유저를 찾을 수 없습니다.');
         }
 
-        await DB.user.update(this.context.user.id, {
-            isWork: false,
-        });
+        this.context.setUser(user);
 
+        await workerExceptionFilter(
+            async () => await timeout(this.runSteps(), bot.syncBot.timeout),
+            this.context,
+        );
         const result = this.context.getResult();
         return result;
-    }
-
-    private async runStepsWithTimeout() {
-        try {
-            await timeout(this.runSteps(), context.syncBot.timeout);
-        } catch (err) {
-            if (err instanceof TimeoutError) {
-                throw new SyncTimeoutError({
-                    user: this.context.user,
-                });
-            } else {
-                throw err;
-            }
-        }
     }
 
     private async runSteps() {
         await this.init();
         await this.startSync();
-        await this.validation();
+        const res = await this.validation();
 
-        if (this.context.user.lastCalendarSync) {
+        if (res.skip) {
+            await this.endSync();
+            return;
+        }
+
+        if (this.isUserInitialized()) {
             await this.eraseDeletedEvent();
             await this.syncEvents();
             await this.syncNewCalendars();
@@ -103,11 +71,24 @@ export class Worker {
         await this.endSync();
     }
 
+    private isUserInitialized() {
+        return this.context.user.lastCalendarSync;
+    }
+
+    /**
+     * 작업을 시작하기 전에 필요한 데이터를 불러오고, Assist를 초기화합니다.
+     */
     private async init() {
-        this.context.startedAt = new Date();
-        this.context.user = await this.getTargetUser();
-        this.context.calendars = await this.getUserCalendar();
-        this.context.config = this.context.getInitConfig();
+        this.debugLog('STEP: init');
+
+        if (this.context.user.lastCalendarSync) {
+            this.debugLog(
+                `period: ${this.context.period.start.toISOString()} ~ ${this.context.period.end.toISOString()}`,
+            );
+        }
+
+        const calendars = await this.getUserCalendar();
+        this.context.setCalendars(calendars);
 
         this.eventLinkAssist = new EventLinkAssist({
             context: this.context,
@@ -115,24 +96,37 @@ export class Worker {
 
         this.notionAssist = new NotionAssist({
             context: this.context,
-            eventLinkAssist: this.eventLinkAssist,
         });
 
         this.googleCalendarAssist = new GoogleCalendarAssist({
             context: this.context,
-            eventLinkAssist: this.eventLinkAssist,
         });
 
         this.workerAssist = new WorkerAssist({
             context: this.context,
+        });
+
+        this.eventLinkAssist.dependencyInjection({});
+        this.notionAssist.dependencyInjection({
+            eventLinkAssist: this.eventLinkAssist,
+            googleCalendarAssist: this.googleCalendarAssist,
+        });
+        this.googleCalendarAssist.dependencyInjection({
+            eventLinkAssist: this.eventLinkAssist,
+            notionAssist: this.notionAssist,
+        });
+        this.workerAssist.dependencyInjection({
             eventLinkAssist: this.eventLinkAssist,
             googleCalendarAssist: this.googleCalendarAssist,
             notionAssist: this.notionAssist,
         });
     }
 
-    // 작업 시작
+    /**
+     *
+     */
     private async startSync() {
+        this.debugLog('STEP: startSync');
         this.context.result.step = 'startSync';
 
         await this.workerAssist.startSyncUserUpdate();
@@ -140,31 +134,52 @@ export class Worker {
 
     // 유효성 검증
     private async validation() {
+        this.debugLog('STEP: validation');
         this.context.result.step = 'validation';
 
-        await this.workerAssist.validation();
+        if (this.context.period.start >= this.context.period.end) {
+            return {
+                skip: true,
+            };
+        }
+
+        await this.notionAssist.validationAndRestore();
+        await this.googleCalendarAssist.validation();
+        return {
+            skip: false,
+        };
     }
 
     // 제거된 페이지 삭제
     private async eraseDeletedEvent() {
+        this.debugLog('STEP: eraseDeletedEvent');
         this.context.result.step = 'eraseDeletedEvent';
 
         await this.workerAssist.eraseDeletedNotionPage();
+        this.debugLog(
+            `eraseDeletedNotionPage: ${this.context.result.eraseDeletedEvent.notion}개`,
+        );
+
         await this.workerAssist.eraseDeletedEventLink();
+        this.debugLog(
+            `eraseDeletedEventLink: ${this.context.result.eraseDeletedEvent.eventLink}개`,
+        );
     }
 
     // 동기화
     private async syncEvents() {
+        this.debugLog('STEP: syncEvents');
         this.context.result.step = 'syncEvents';
 
         const updatedPages = await this.notionAssist.getUpdatedPages();
+        this.debugLog(`updatedPages: ${updatedPages.length}개`);
+
         const updatedGCalEvents =
             await this.googleCalendarAssist.getUpdatedEvents();
+        this.debugLog(`updatedGCalEvents: ${updatedGCalEvents.length}개`);
 
-        for (const { calendar, events } of updatedGCalEvents) {
-            for (const event of events) {
-                await this.notionAssist.CUDPage(event, calendar);
-            }
+        for (const event of updatedGCalEvents) {
+            await this.notionAssist.CUDPage(event);
         }
 
         for (const page of updatedPages) {
@@ -174,6 +189,7 @@ export class Worker {
 
     // 새로운 캘린더 연결
     private async syncNewCalendars() {
+        this.debugLog('STEP: syncNewCalendar');
         this.context.result.step = 'syncNewCalendar';
 
         const newCalendars = this.context.calendars.filter(
@@ -182,14 +198,16 @@ export class Worker {
 
         for (const newCalendar of newCalendars) {
             await this.workerAssist.syncNewCalendar(newCalendar);
+            this.debugLog(
+                `새로운 캘린더 연결: ${newCalendar.googleCalendarName}`,
+            );
         }
     }
 
     // 계정 초기 세팅
     private async initAccount() {
+        this.debugLog('STEP: initAccount');
         this.context.result.step = 'initAccount';
-
-        const pages = await this.notionAssist.getPages();
 
         const newCalendars = this.context.calendars.filter(
             (e) => e.status === 'PENDING',
@@ -197,11 +215,15 @@ export class Worker {
 
         for (const newCalendar of newCalendars) {
             await this.workerAssist.syncNewCalendar(newCalendar);
+            this.debugLog(
+                `새로운 캘린더 연결: ${newCalendar.googleCalendarName}`,
+            );
         }
     }
 
     // 작업 종료
     private async endSync() {
+        this.debugLog('STEP: endSync');
         this.context.result.step = 'endSync';
 
         await this.workerAssist.endSyncUserUpdate();
@@ -213,6 +235,7 @@ export class Worker {
             where: {
                 id: this.context.userId,
             },
+            relations: ['notionWorkspace'],
         });
     }
 
