@@ -23,7 +23,7 @@ const getProp = <
     type: T,
 ): Extract<P['properties'][string], { type: T }> => {
     const prop = Object.values(page.properties).find((e) => e.id === propId);
-    if (prop.type !== type) {
+    if (prop?.type !== type) {
         throw new Error(
             `Property ${propId} is not of type ${type}, but ${prop.type}`,
         );
@@ -101,16 +101,20 @@ export class NotionEventDto extends ProtoEvent {
             ),
             isDeleted: getProp(originalEvent, props.delete, 'checkbox')
                 .checkbox,
-            location: getProp(
-                originalEvent,
-                props.location,
-                'rich_text',
-            ).rich_text.reduce((pre, cur) => pre + cur.plain_text, ''),
-            description: getProp(
-                originalEvent,
-                props.description,
-                'rich_text',
-            ).rich_text.reduce((pre, cur) => pre + cur.plain_text, ''),
+            location: props.location
+                ? getProp(
+                      originalEvent,
+                      props.location,
+                      'rich_text',
+                  ).rich_text.reduce((pre, cur) => pre + cur.plain_text, '')
+                : '',
+            description: props.description
+                ? getProp(
+                      originalEvent,
+                      props.description,
+                      'rich_text',
+                  ).rich_text.reduce((pre, cur) => pre + cur.plain_text, '')
+                : '',
             date: getProp(originalEvent, props.date, 'date').date,
             googleCalendarEventLink: getProp(originalEvent, props.link, 'url')
                 .url,
