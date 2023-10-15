@@ -9,6 +9,7 @@ import { WorkContext } from '../../context/work.context';
 import { SyncError } from '../../error/error';
 
 import { GoogleCalendarAPI } from './api.decorator';
+import { extraGoogleCalendarAPIErrorFilterRules } from './apiErrorFilterRules';
 
 export const getGoogleCalendarTokensByUser = (user: UserEntity) => {
     const callbackUrls = JSON.parse(process.env.GOOGLE_CALLBACKS || '{}');
@@ -223,7 +224,9 @@ export class GoogleCalendarAssistApi {
         }
     }
 
-    @GoogleCalendarAPI()
+    @GoogleCalendarAPI([
+        extraGoogleCalendarAPIErrorFilterRules.IGNORE_NOT_FOUND,
+    ])
     async updateEvent(
         event: GoogleCalendarEventDto,
     ): Promise<GoogleCalendarEventDto> {

@@ -193,3 +193,15 @@ export const baseGoogleCalendarAPIErrorFilterRules: GoogleCalendarErrorFilterRul
             },
         },
     ];
+
+export type ExtraGoogleCalendarAPIErrorFilterRuleNames = 'IGNORE_NOT_FOUND';
+
+export const extraGoogleCalendarAPIErrorFilterRules: Record<
+    ExtraGoogleCalendarAPIErrorFilterRuleNames,
+    GoogleCalendarErrorFilterRule
+> = {
+    IGNORE_NOT_FOUND: {
+        name: 'IGNORE_NOT_FOUND',
+        condition: ({ status }) => status === 404,
+    },
+};
