@@ -4,8 +4,11 @@ import { retry, sleep } from '@/utils';
 import { WorkContext } from '../../context/work.context';
 
 import { googleCalendarAPIErrorFilter } from './apiErrorFilter';
+import { GoogleCalendarErrorFilterRule } from './apiErrorFilterRules';
 
-export function GoogleCalendarAPI() {
+export function GoogleCalendarAPI(
+    extraFilterRules?: GoogleCalendarErrorFilterRule[],
+) {
     return function (target: any, key: string, desc: PropertyDescriptor) {
         const method = desc.value;
         desc.value = async function (...args: any) {
@@ -16,6 +19,7 @@ export function GoogleCalendarAPI() {
                         method.bind(this, ...args),
                         context,
                         args,
+                        extraFilterRules,
                     ),
                 GOOGLE_CALENDAR_API.MAX_RETRY,
                 GOOGLE_CALENDAR_API.RETRY_DELAY,
