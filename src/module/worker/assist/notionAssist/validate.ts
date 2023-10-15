@@ -81,6 +81,13 @@ export class NotionValidation {
                 (e) => e.id === userProps[userProp],
             );
             if (!prop) {
+                if (
+                    contains(ADDITIONAL_NOTION_PROPS, userProp) &&
+                    !this.context.user.isSyncAdditionalProps
+                ) {
+                    continue;
+                }
+
                 // 해당 prop이 존재 하지 않음
                 if (contains(ADDABLE_NOTION_PROPS, userProp)) {
                     await this.restoreProp(userProp);
