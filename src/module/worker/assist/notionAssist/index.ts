@@ -156,6 +156,7 @@ export class NotionAssist extends Assist {
             newEvent.calendar.googleCalendarId =
                 eventLink.googleCalendarCalendarId;
 
+            if (newEvent.calendar.accessRole === 'reader') return;
             await this.googleCalendarAssist.updateEvent(newEvent);
         }
     }
