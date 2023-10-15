@@ -1,12 +1,13 @@
 import { UserPlan } from '@opize/calendar2notion-object';
-import { DB } from '@/database';
-
 import dayjs from 'dayjs';
 import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
 import { IsNull, LessThan } from 'typeorm';
-import { context } from '../context';
-import { runnerLogger } from '@/logger/winston';
+
+import { DB } from '@/database';
+
+import { bot } from '../bot';
+
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
@@ -33,9 +34,8 @@ export class RunnerService {
                 isWork: false,
                 isConnected: true,
                 userPlan: plan,
-                lastCalendarSync: LessThan(
-                    dayjs().tz('Asia/Seoul').add(-1, 'minute').toDate(),
-                ),
+                lastCalendarSync: LessThan(dayjs().add(-1, 'minute').toDate()),
+                workStartedAt: LessThan(dayjs().add(-1, 'minute').toDate()),
             },
             order: {
                 lastCalendarSync: {
@@ -70,9 +70,7 @@ export class RunnerService {
     }
 
     private isWorkingUser(userId: number) {
-        return context.worker.workers
-            .map((e) => e.nowWorkUserId)
-            .includes(userId);
+        return bot.worker.workers.map((e) => e.nowWorkUserId).includes(userId);
     }
 }
 

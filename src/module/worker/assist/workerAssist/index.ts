@@ -1,12 +1,13 @@
 import { CalendarEntity, EventEntity } from '@opize/calendar2notion-object';
 import dayjs from 'dayjs';
-import { calendar_v3 } from 'googleapis';
 import { LessThan } from 'typeorm';
 
-import { Assist } from '../../types/assist';
-import { WorkContext } from '../../context/work.context';
 import { DB } from '@/database';
+
 import { NotionAssist, EventLinkAssist, GoogleCalendarAssist } from '..';
+import PackageJSON from '../../../../../package.json';
+import { WorkContext } from '../../context/work.context';
+import { Assist } from '../../types/assist';
 
 export class WorkerAssist extends Assist {
     private context: WorkContext;
@@ -15,38 +16,34 @@ export class WorkerAssist extends Assist {
     private googleCalendarAssist: GoogleCalendarAssist;
     private notionAssist: NotionAssist;
 
-    constructor({
-        context,
+    constructor({ context }: { context: WorkContext }) {
+        super();
+        this.context = context;
+        this.assistName = 'WorkerAssist';
+    }
+
+    public dependencyInjection({
         eventLinkAssist,
         googleCalendarAssist,
         notionAssist,
     }: {
-        context: WorkContext;
         eventLinkAssist: EventLinkAssist;
         googleCalendarAssist: GoogleCalendarAssist;
         notionAssist: NotionAssist;
     }) {
-        super();
-        this.context = context;
         this.eventLinkAssist = eventLinkAssist;
         this.googleCalendarAssist = googleCalendarAssist;
         this.notionAssist = notionAssist;
-        this.assistName = 'WorkerAssist';
-    }
-
-    public async validation() {
-        await this.notionAssist.validation();
-        await this.googleCalendarAssist.validation();
+        return;
     }
 
     public async eraseDeletedNotionPage() {
-        const notionDeletedPageIds =
-            await this.notionAssist.getDeletedPageIds();
-        for (const pageId of notionDeletedPageIds) {
-            await this.eraseNotionPage(pageId);
+        const notionDeletedPages = await this.notionAssist.getDeletedPages();
+        for (const page of notionDeletedPages) {
+            await this.eraseNotionPage(page.notionPageId);
         }
         this.context.result.eraseDeletedEvent.notion =
-            notionDeletedPageIds.length;
+            notionDeletedPages.length;
     }
 
     public async eraseDeletedEventLink() {
@@ -79,30 +76,21 @@ export class WorkerAssist extends Assist {
         await this.eventLinkAssist.deleteEventLink(eventLink);
     }
 
-    public async addEventByGCal(
-        event: calendar_v3.Schema$Event,
-        calendar: CalendarEntity,
-    ) {
-        const page = await this.notionAssist.addPage(event, calendar);
-        await this.eventLinkAssist.create(page, event, calendar);
-        return page;
-    }
-
     public async startSyncUserUpdate() {
         await DB.user.update(this.context.user.id, {
-            workStartedAt: this.context.user.lastCalendarSync,
+            workStartedAt: this.context.startedAt,
             isWork: true,
             syncbotId: process.env.SYNCBOT_PREFIX,
+            syncbotVersion: PackageJSON.version,
         });
     }
 
     public async endSyncUserUpdate() {
         await DB.user.update(this.context.user.id, {
-            workStartedAt: '',
             lastSyncStatus: '',
             isWork: false,
             syncbotId: null,
-            lastCalendarSync: new Date(),
+            lastCalendarSync: this.context.period.end,
         });
     }
 
@@ -127,9 +115,8 @@ export class WorkerAssist extends Assist {
         });
 
         await this.notionAssist.addCalendarProp(newCalendar);
-        const events = await this.googleCalendarAssist.getEventByCalendar(
-            newCalendar.googleCalendarId,
-        );
+        const events =
+            await this.googleCalendarAssist.getEventsByCalendar(newCalendar);
 
         const calendar = await DB.calendar.findOne({
             where: {
@@ -137,7 +124,7 @@ export class WorkerAssist extends Assist {
             },
         });
         for (const event of events) {
-            await this.addEventByGCal(event, calendar);
+            await this.notionAssist.CUDPage(event);
         }
 
         this.context.result.syncNewCalendar[`${calendar.id}`].eventCount =

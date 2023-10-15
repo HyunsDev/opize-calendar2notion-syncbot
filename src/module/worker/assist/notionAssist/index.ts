@@ -1,38 +1,28 @@
 import { CalendarEntity } from '@opize/calendar2notion-object';
-import dayjs from 'dayjs';
-import timezone from 'dayjs/plugin/timezone';
-import utc from 'dayjs/plugin/utc';
-import { calendar_v3, google } from 'googleapis';
 
+import { DB } from '@/database';
+import { GoogleCalendarEventDto, NotionEventDto } from '@/module/event';
+
+import { WorkContext } from '../../context/work.context';
 import { SyncErrorCode } from '../../error';
 import { NotionSyncError } from '../../error/notion.error';
 import { Assist } from '../../types/assist';
 import { EventLinkAssist } from '../eventLinkAssist';
+import { GoogleCalendarAssist } from '../googleCalendarAssist';
 
 import { NotionAssistApi } from './api';
-import { WorkContext } from '../../context/work.context';
-import { DB } from '@/database';
-import { GetDatabaseResponse } from '@notionhq/client/build/src/api-endpoints';
-
-dayjs.extend(utc);
-dayjs.extend(timezone);
+import { NotionValidation } from './validate';
 
 export class NotionAssist extends Assist {
     private context: WorkContext;
 
     private api: NotionAssistApi;
     private eventLinkAssist: EventLinkAssist;
+    private googleCalendarAssist: GoogleCalendarAssist;
 
-    constructor({
-        context,
-        eventLinkAssist,
-    }: {
-        context: WorkContext;
-        eventLinkAssist: EventLinkAssist;
-    }) {
+    constructor({ context }: { context: WorkContext }) {
         super();
         this.context = context;
-        this.eventLinkAssist = eventLinkAssist;
         this.assistName = 'NotionAssist';
 
         this.api = new NotionAssistApi({
@@ -40,13 +30,35 @@ export class NotionAssist extends Assist {
         });
     }
 
-    public async validation() {
-        const database = await this.api.getDatabase();
-        this.checkProps(database);
+    public dependencyInjection({
+        eventLinkAssist,
+        googleCalendarAssist,
+    }: {
+        eventLinkAssist: EventLinkAssist;
+        googleCalendarAssist: GoogleCalendarAssist;
+    }) {
+        this.eventLinkAssist = eventLinkAssist;
+        this.googleCalendarAssist = googleCalendarAssist;
     }
 
-    public async getDeletedPageIds() {
-        return await this.api.getDeletedPageIds();
+    public async validationAndRestore() {
+        const validation = new NotionValidation(this.context, this.api);
+        const errors = await validation.run();
+        if (errors.length !== 0) {
+            throw new NotionSyncError({
+                code: SyncErrorCode.notion.sync.VALIDATION_ERROR,
+                user: this.context.user,
+                detail: errors
+                    .map((e) => `${e.error}: ${e.message}`)
+                    .join('\n'),
+            });
+        }
+
+        return true;
+    }
+
+    public async getDeletedPages() {
+        return await this.api.getDeletedPages();
     }
 
     public async addCalendarProp(calendar: CalendarEntity) {
@@ -56,12 +68,10 @@ export class NotionAssist extends Assist {
             name: calendar.googleCalendarName,
             id: undefined,
         });
-        const database = await this.api.updateCalendarProps(calendarOptions);
+        const database = await this.api.updateCalendarOptions(calendarOptions);
 
         // 새로운 속성 찾기
-        const calendarProp: string = JSON.parse(
-            this.context.user.notionProps,
-        ).calendar;
+        const { calendar: calendarProp } = this.context.user.parsedNotionProps;
         const oldPropIds = this.context.calendars.map(
             (e) => e.notionPropertyId,
         );
@@ -86,14 +96,6 @@ export class NotionAssist extends Assist {
         await this.api.deletePage(pageId);
     }
 
-    public async addPage(
-        event: calendar_v3.Schema$Event,
-        calendar: CalendarEntity,
-    ) {
-        const page = await this.api.createPage(event, calendar);
-        return page;
-    }
-
     public async getUpdatedPages() {
         const updatedPages = await this.api.getUpdatedPages();
         this.context.result.syncEvents.notion2GCalCount = updatedPages.length;
@@ -105,118 +107,58 @@ export class NotionAssist extends Assist {
         return pages;
     }
 
-    public async CUDPage(
-        event: calendar_v3.Schema$Event,
-        calendar: CalendarEntity,
-    ) {
-        const eventLink = await this.eventLinkAssist.findByGCalEvent(
-            event.id,
-            calendar.googleCalendarId,
+    public async updatePage(googleCalendarEvent: GoogleCalendarEventDto) {
+        const page = await this.api.updatePage(
+            NotionEventDto.fromEvent(googleCalendarEvent.toEvent()),
+        );
+        return page;
+    }
+
+    public async CUDPage(googleCalendarEvent: GoogleCalendarEventDto) {
+        const event = googleCalendarEvent.toEvent();
+
+        let eventLink = await this.eventLinkAssist.findByGCalEvent(
+            event.googleCalendarEventId,
+            event.calendar.googleCalendarId,
         );
 
         if (eventLink && eventLink.notionPageId) {
-            const gCalEventUpdated = dayjs(event.updated);
-            const userUpdated = dayjs(this.context.user.lastCalendarSync);
-            // const eventLinkUpdated = new Date(
-            //     eventLink.lastGoogleCalendarUpdate,
-            // );
+            event.googleCalendarEventId = eventLink.googleCalendarEventId;
+            event.notionPageId = eventLink.notionPageId;
 
-            // 이미 업데이트 된 이벤트
-            if (gCalEventUpdated < userUpdated) {
+            if (event.status === 'cancelled') {
+                await this.deletePage(event.notionPageId);
                 return;
             }
 
-            // 취소된 이벤트
-            if (event.status === 'cancelled') {
-                await this.deletePage(eventLink.notionPageId);
-                await this.eventLinkAssist.deleteEventLink(eventLink);
-                return true;
-            }
-
-            // 캘린더 이동
             if (
-                eventLink.googleCalendarCalendarId !== calendar.googleCalendarId
+                eventLink.googleCalendarCalendarId !==
+                event.calendar.googleCalendarId
             ) {
-                // 노션 페이지 calendar 속성은 update에서 적용되므로 이곳에서는 적용하지 않음
-                await this.eventLinkAssist.updateCalendar(eventLink, calendar);
+                await this.eventLinkAssist.updateCalendar(
+                    eventLink,
+                    event.calendar,
+                );
             }
 
-            await this.api.updatePage(eventLink, event, calendar);
-            await this.eventLinkAssist.updateLastNotionUpdate(eventLink);
-            return;
+            await this.api.updatePage(NotionEventDto.fromEvent(event));
         } else {
             if (event.status === 'cancelled') return;
-            const page = await this.api.createPage(event, calendar);
-            await this.eventLinkAssist.create(page, event, calendar);
-        }
-    }
 
-    private checkProps(database: GetDatabaseResponse) {
-        const userProps: {
-            title: string;
-            calendar: string;
-            date: string;
-            delete: string;
-            link?: string;
-        } = JSON.parse(this.context.user.notionProps);
-
-        const requiredProps = ['title', 'calendar', 'date', 'delete'];
-
-        const propsMap = {
-            title: 'title',
-            calendar: 'select',
-            date: 'date',
-            delete: 'checkbox',
-            link: 'url',
-        };
-
-        const errors: {
-            error: string;
-            message: string;
-        }[] = [];
-
-        for (const prop of requiredProps) {
-            if (!userProps[prop]) {
-                errors.push({
-                    error: 'prop_not_exist',
-                    message: `필수 속성인 ${prop} 이(가) 없습니다`,
-                });
-            }
-        }
-
-        for (const userProp in userProps) {
-            const prop = Object.values(database.properties).find(
-                (e) => e.id === userProps[userProp],
+            const newEvent = await this.api.createPage(
+                NotionEventDto.fromEvent(event),
             );
-            if (!prop) {
-                // 해당 prop이 존재 하지 않음
-                errors.push({
-                    error: 'prop_not_found',
-                    message: `${userProp}에 해당하는 속성을 찾을 수 없습니다. (아이디: ${userProps[userProp]})`,
-                });
-                continue;
-            }
-            if (propsMap[userProp] && prop.type !== propsMap[userProp]) {
-                // 정해진 타입과 일치하지 않음
-                errors.push({
-                    error: 'wrong_prop_type',
-                    message: `${userProp} 속성의 유형이 올바르지 않습니다. (기대한 타입: ${propsMap[userProp]}, 실제 타입: ${prop.type})`,
-                });
-                continue;
-            }
-        }
+            eventLink = await this.eventLinkAssist.create(
+                event.merge(newEvent.toEvent()),
+            );
 
-        if (errors.length !== 0) {
-            throw new NotionSyncError({
-                code: SyncErrorCode.notion.sync.VALIDATION_ERROR,
-                user: this.context.user,
-                detail: errors
-                    .map((e) => `${e.error}: ${e.message}`)
-                    .join('\n'),
-            });
-        }
+            newEvent.googleCalendarEventId = eventLink.googleCalendarEventId;
+            newEvent.calendar.googleCalendarId =
+                eventLink.googleCalendarCalendarId;
 
-        return true;
+            if (newEvent.calendar.accessRole === 'reader') return;
+            await this.googleCalendarAssist.updateEvent(newEvent);
+        }
     }
 
     private getCalendarOptions(): {

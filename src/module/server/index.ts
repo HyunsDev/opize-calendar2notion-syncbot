@@ -2,9 +2,10 @@ import cors from 'cors';
 import express from 'express';
 import morgan from 'morgan';
 
+import { serverLogger } from '@/logger/winston';
+
 import controlRouter from './router/control';
 import statusRouter from './router/status';
-import { serverLogger } from '@/logger/winston';
 
 const app = express();
 app.use(

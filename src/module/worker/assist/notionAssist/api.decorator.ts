@@ -1,104 +1,33 @@
-import { APIResponseError } from '@notionhq/client';
-import { UserEntity } from '@opize/calendar2notion-object';
+import { NOTION_API } from '@/constant/notion.constant';
+import { retry, sleep } from '@/utils';
 
-import { sleep } from '@/utils';
-import { SyncErrorCode } from '../../error';
-import { NotionAPIError } from '../../error/notion.error';
+import { WorkContext } from '../../context/work.context';
 
-const handleNotionHandlerErrors = async (
-    err: APIResponseError,
-    user: UserEntity,
-    target: 'database' | 'page',
-) => {
-    const { status } = err;
+import { notionAPIErrorFilter } from './apiErrorFilter';
+import { NotionAPIErrorFilterRule } from './apiErrorFilterRule';
 
-    if (status === 400) {
-        throw new NotionAPIError({
-            code: SyncErrorCode.notion.api.INVALID_REQUEST,
-            user,
-            err,
-        });
-    }
-
-    if (status === 401) {
-        throw new NotionAPIError({
-            code: SyncErrorCode.notion.api.UNAUTHORIZED,
-            user,
-            err,
-        });
-    }
-
-    if (status === 404) {
-        throw new NotionAPIError({
-            code:
-                target === 'database'
-                    ? SyncErrorCode.notion.api.DATABASE_NOT_FOUND
-                    : SyncErrorCode.notion.api.PAGE_NOT_FOUND,
-            user,
-            err,
-        });
-    }
-
-    if (status === 429) {
-        throw new NotionAPIError({
-            code: SyncErrorCode.notion.api.RATE_LIMIT,
-            user,
-            err,
-        });
-    }
-
-    if (status === 500) {
-        throw new NotionAPIError({
-            code: SyncErrorCode.notion.api.INTERNAL_SERVER_ERROR,
-            user,
-            err,
-        });
-    }
-
-    if (status === 503) {
-        throw new NotionAPIError({
-            code: SyncErrorCode.notion.api.SERVICE_UNAVAILABLE,
-            user,
-            err,
-        });
-    }
-
-    throw new NotionAPIError({
-        code: SyncErrorCode.notion.api.UNKNOWN_ERROR,
-        user,
-        err,
-    });
-};
-
-export function notionApi(targetObject: 'database' | 'page') {
+export function NotionAPI(
+    targetObject: 'database' | 'page',
+    extraFilterRules?: NotionAPIErrorFilterRule[],
+) {
     return function (target: any, key: string, desc: PropertyDescriptor) {
         const method = desc.value;
-        desc.value = async function (...e: any) {
-            try {
-                // API RATE LIMIT 방지를 위한 SLEEP
-                await sleep(400);
-
-                let retriesCount = 3;
-                while (true) {
-                    try {
-                        retriesCount -= 1;
-                        return await method.apply(this, e);
-                    } catch (err) {
-                        if (retriesCount === 0) throw err;
-                        await sleep(1000);
-                    }
-                }
-            } catch (err: unknown) {
-                if (err instanceof APIResponseError) {
-                    await handleNotionHandlerErrors(
-                        err,
-                        this.context.user,
+        desc.value = async function (...args: any) {
+            const context = this.context as WorkContext;
+            const res = await retry(
+                async () =>
+                    await notionAPIErrorFilter(
+                        method.bind(this, ...args),
                         targetObject,
-                    );
-                } else {
-                    throw err;
-                }
-            }
+                        context,
+                        args,
+                        extraFilterRules,
+                    ),
+                NOTION_API.MAX_RETRY,
+                NOTION_API.RETRY_DELAY,
+            );
+            await sleep(NOTION_API.INTERVAL);
+            return res;
         };
     };
 }

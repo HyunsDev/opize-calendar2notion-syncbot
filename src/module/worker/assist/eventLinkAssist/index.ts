@@ -1,15 +1,21 @@
-import { PartialPageObjectResponse } from '@notionhq/client/build/src/api-endpoints';
 import { CalendarEntity, EventEntity } from '@opize/calendar2notion-object';
-import { calendar_v3 } from 'googleapis';
 
 import { DB } from '@/database';
-import { WorkContext } from '../../context/work.context';
+import { EventDto } from '@/module/event';
 
-export class EventLinkAssist {
+import { WorkContext } from '../../context/work.context';
+import { Assist } from '../../types/assist';
+
+export class EventLinkAssist extends Assist {
     context: WorkContext;
 
     constructor({ context }: { context: WorkContext }) {
+        super();
         this.context = context;
+    }
+
+    public dependencyInjection({}) {
+        return;
     }
 
     public async findByNotionPageId(pageId: string) {
@@ -60,31 +66,28 @@ export class EventLinkAssist {
     }
 
     public async updateLastNotionUpdate(eventLink: EventEntity) {
-        eventLink.lastNotionUpdate = new Date();
+        eventLink.lastNotionUpdate = this.context.period.end;
         return await DB.event.save(eventLink);
     }
 
     public async updateLastGCalUpdate(eventLink: EventEntity) {
-        eventLink.lastGoogleCalendarUpdate = new Date();
+        eventLink.lastGoogleCalendarUpdate = this.context.period.end;
         return await DB.event.save(eventLink);
     }
 
-    public async create(
-        page: PartialPageObjectResponse,
-        event: calendar_v3.Schema$Event,
-        calendar: CalendarEntity,
-    ) {
-        const eventLink = EventEntity.create({
-            googleCalendarEventId: event.id,
-            googleCalendarCalendarId: calendar.googleCalendarId,
-            lastGoogleCalendarUpdate: new Date(event.updated),
-            lastNotionUpdate: new Date(),
+    public async create(event: EventDto) {
+        let eventLink = EventEntity.create({
+            googleCalendarEventId: event.googleCalendarEventId,
+            googleCalendarCalendarId: event.calendar.googleCalendarId,
+            lastGoogleCalendarUpdate: this.context.period.end,
+            lastNotionUpdate: this.context.period.end,
             status: 'SYNCED',
             willRemove: false,
-            notionPageId: page.id,
-            calendar,
+            notionPageId: event.notionPageId,
+            calendar: event.calendar,
             user: this.context.user,
         });
-        await DB.event.save(eventLink);
+        eventLink = await DB.event.save(eventLink);
+        return eventLink;
     }
 }
