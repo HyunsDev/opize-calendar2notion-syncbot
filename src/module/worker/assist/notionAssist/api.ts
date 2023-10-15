@@ -1,5 +1,8 @@
 import { Client } from '@notionhq/client';
-import { PageObjectResponse } from '@notionhq/client/build/src/api-endpoints';
+import {
+    CreatePageResponse,
+    PageObjectResponse,
+} from '@notionhq/client/build/src/api-endpoints';
 
 import { NotionEventDto } from '@/module/event';
 import { fetchAll } from '@/utils';
@@ -147,61 +150,100 @@ export class NotionAssistApi {
     async createPage(event: NotionEventDto) {
         const props = this.context.user.parsedNotionProps;
 
-        const res = await this.client.pages.create({
-            parent: {
-                type: 'database_id',
-                database_id: this.context.user.notionDatabaseId,
-            },
-            properties: {
-                title: {
-                    type: 'title',
-                    title: [
-                        {
-                            type: 'text',
-                            text: {
-                                content: event.title || '',
-                            },
-                        },
-                    ],
+        let res: CreatePageResponse;
+
+        if (this.context.user.isSyncAdditionalProps) {
+            res = await this.client.pages.create({
+                parent: {
+                    type: 'database_id',
+                    database_id: this.context.user.notionDatabaseId,
                 },
-                [props.calendar]: {
-                    type: 'select',
-                    select: {
-                        name: event.calendar.googleCalendarName,
+                properties: {
+                    title: {
+                        type: 'title',
+                        title: [
+                            {
+                                type: 'text',
+                                text: {
+                                    content: event.title || '',
+                                },
+                            },
+                        ],
+                    },
+                    [props.calendar]: {
+                        type: 'select',
+                        select: {
+                            name: event.calendar.googleCalendarName,
+                        },
+                    },
+                    [props.date]: {
+                        type: 'date',
+                        date: event.date,
+                    },
+                    [props.link]: {
+                        type: 'url',
+                        url: event.googleCalendarEventLink || null,
+                    },
+                    [props.description]: {
+                        type: 'rich_text',
+                        rich_text: [
+                            {
+                                type: 'text',
+                                text: {
+                                    content: event.description || '',
+                                },
+                            },
+                        ],
+                    },
+                    [props.location]: {
+                        type: 'rich_text',
+                        rich_text: [
+                            {
+                                type: 'text',
+                                text: {
+                                    content: event.location || '',
+                                },
+                            },
+                        ],
                     },
                 },
-                [props.date]: {
-                    type: 'date',
-                    date: event.date,
+            });
+        } else {
+            res = await this.client.pages.create({
+                parent: {
+                    type: 'database_id',
+                    database_id: this.context.user.notionDatabaseId,
                 },
-                [props.link]: {
-                    type: 'url',
-                    url: event.googleCalendarEventLink || null,
-                },
-                [props.description]: {
-                    type: 'rich_text',
-                    rich_text: [
-                        {
-                            type: 'text',
-                            text: {
-                                content: event.description || '',
+                properties: {
+                    title: {
+                        type: 'title',
+                        title: [
+                            {
+                                type: 'text',
+                                text: {
+                                    content: event.title || '',
+                                },
                             },
+                        ],
+                    },
+                    [props.calendar]: {
+                        type: 'select',
+                        select: {
+                            name: event.calendar.googleCalendarName,
                         },
-                    ],
+                    },
+                    [props.date]: {
+                        type: 'date',
+                        date: event.date,
+                    },
+                    [props.link]: {
+                        type: 'url',
+                        url: event.googleCalendarEventLink || null,
+                    },
                 },
-                [props.location]: {
-                    type: 'rich_text',
-                    rich_text: [
-                        {
-                            type: 'text',
-                            text: {
-                                content: event.location || '',
-                            },
-                        },
-                    ],
-                },
-            },
-        });
+            });
+        }
+
         return NotionEventDto.fromNotionEvent(
             res as PageObjectResponse,
             event.calendar,
@@ -344,63 +386,102 @@ export class NotionAssistApi {
     ])
     async updatePage(event: NotionEventDto) {
         const props = this.context.user.parsedNotionProps;
-        const res = await this.client.pages.update({
-            page_id: event.notionPageId,
-            properties: {
-                title: {
-                    type: 'title',
-                    title: [
-                        {
-                            type: 'text',
-                            text: {
-                                content: event.title || '',
+
+        if (this.context.user.isSyncAdditionalProps) {
+            const res = await this.client.pages.update({
+                page_id: event.notionPageId,
+                properties: {
+                    title: {
+                        type: 'title',
+                        title: [
+                            {
+                                type: 'text',
+                                text: {
+                                    content: event.title || '',
+                                },
                             },
+                        ],
+                    },
+                    [props.calendar]: {
+                        type: 'select',
+                        select: {
+                            name: event.calendar.googleCalendarName,
                         },
-                    ],
-                },
-                [props.calendar]: {
-                    type: 'select',
-                    select: {
-                        name: event.calendar.googleCalendarName,
+                    },
+                    [props.date]: {
+                        type: 'date',
+                        date: event.date,
+                    },
+                    [props.link]: {
+                        type: 'url',
+                        url: event.googleCalendarEventLink || null,
+                    },
+                    [props.description]: {
+                        type: 'rich_text',
+                        rich_text: [
+                            {
+                                type: 'text',
+                                text: {
+                                    content: event.description || '',
+                                },
+                            },
+                        ],
+                    },
+                    [props.location]: {
+                        type: 'rich_text',
+                        rich_text: [
+                            {
+                                type: 'text',
+                                text: {
+                                    content: event.location || '',
+                                },
+                            },
+                        ],
                     },
                 },
-                [props.date]: {
-                    type: 'date',
-                    date: event.date,
-                },
-                [props.link]: {
-                    type: 'url',
-                    url: event.googleCalendarEventLink || null,
-                },
-                [props.description]: {
-                    type: 'rich_text',
-                    rich_text: [
-                        {
-                            type: 'text',
-                            text: {
-                                content: event.description || '',
+            });
+            return NotionEventDto.fromNotionEvent(
+                res as PageObjectResponse,
+                event.calendar,
+                props,
+            );
+        } else {
+            const res = await this.client.pages.update({
+                page_id: event.notionPageId,
+                properties: {
+                    title: {
+                        type: 'title',
+                        title: [
+                            {
+                                type: 'text',
+                                text: {
+                                    content: event.title || '',
+                                },
                             },
+                        ],
+                    },
+                    [props.calendar]: {
+                        type: 'select',
+                        select: {
+                            name: event.calendar.googleCalendarName,
                         },
-                    ],
+                    },
+                    [props.date]: {
+                        type: 'date',
+                        date: event.date,
+                    },
+                    [props.link]: {
+                        type: 'url',
+                        url: event.googleCalendarEventLink || null,
+                    },
                 },
-                [props.location]: {
-                    type: 'rich_text',
-                    rich_text: [
-                        {
-                            type: 'text',
-                            text: {
-                                content: event.location || '',
-                            },
-                        },
-                    ],
-                },
-            },
-        });
-        return NotionEventDto.fromNotionEvent(
-            res as PageObjectResponse,
-            event.calendar,
-            props,
-        );
+            });
+            return NotionEventDto.fromNotionEvent(
+                res as PageObjectResponse,
+                event.calendar,
+                props,
+            );
+        }
     }
 
     /**

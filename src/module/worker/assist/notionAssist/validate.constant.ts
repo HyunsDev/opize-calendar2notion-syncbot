@@ -7,18 +7,27 @@ export type NotionPropType =
     | 'rich_text'
     | 'last_edited_by';
 
-export const REQUIRED_PROPS = [
+/**
+ * 필수 속성입니다.
+ */
+export const REQUIRED_NOTION_PROPS = [
     'title',
     'calendar',
     'date',
     'delete',
     'link',
-    'location',
-    'description',
     'last_edited_by',
 ] as const;
 
-export const ADDABLE_REQUIRED_PROPS = [
+/**
+ * 추가적인 속성입니다.
+ */
+export const ADDITIONAL_NOTION_PROPS = ['location', 'description'] as const;
+
+/**
+ * 노션에 추가 가능한 (복구 가능한) 속성입니다.
+ */
+export const ADDABLE_NOTION_PROPS = [
     'delete',
     'last_edited_by',
     'link',
@@ -26,8 +35,8 @@ export const ADDABLE_REQUIRED_PROPS = [
     'description',
 ] as const;
 
-export const REQUIRED_PROPS_TYPE_MAP: Record<
-    (typeof REQUIRED_PROPS)[number],
+export const NOTION_PROPS_TYPE_MAP: Record<
+    (typeof REQUIRED_NOTION_PROPS | typeof ADDITIONAL_NOTION_PROPS)[number],
     NotionPropType
 > = {
     title: 'title',
@@ -40,8 +49,8 @@ export const REQUIRED_PROPS_TYPE_MAP: Record<
     last_edited_by: 'last_edited_by',
 } as const;
 
-export const ADDABLE_REQUIRED_PROPS_TYPE_MAP: Record<
-    (typeof ADDABLE_REQUIRED_PROPS)[number],
+export const ADDABLE_PROPS_TYPE_MAP: Record<
+    (typeof ADDABLE_NOTION_PROPS)[number],
     'checkbox' | 'last_edited_by' | 'url' | 'rich_text'
 > = {
     delete: 'checkbox',

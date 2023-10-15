@@ -158,96 +158,69 @@ export class GoogleCalendarAssistApi {
         return GoogleCalendarEventDto.fromGoogleCalendar(res.data, newCalendar);
     }
 
-    // @GoogleCalendarAPI()
-    // public async updateEvent(eventLink: EventEntity, page: PageObjectResponse) {
-    //     const props: {
-    //         title: string;
-    //         calendar: string;
-    //         date: string;
-    //         delete: string;
-    //         link?: string;
-    //     } = JSON.parse(this.context.user.notionProps);
-
-    //     const titleProp = Object.values(page.properties).find(
-    //         (e) => e.type === 'title',
-    //     ) as any;
-    //     const title =
-    //         titleProp.title.map((e: any) => e?.plain_text).join('') || '';
-
-    //     const dateProp = Object.values(page.properties).find(
-    //         (e) => e.id === props.date,
-    //     ) as {
-    //         date: NotionDateTime;
-    //     };
-    //     const date = EventDate.fromNotionDate({
-    //         start: dateProp.date.start,
-    //         end: dateProp.date.end,
-    //     }).toGCalDate();
-
-    //     try {
-    //         return await this.client.events.patch({
-    //             eventId: eventLink.googleCalendarEventId,
-    //             calendarId: eventLink.googleCalendarCalendarId,
-    //             requestBody: {
-    //                 start: date.start,
-    //                 end: date.end,
-    //                 summary: title,
-    //             },
-    //         });
-    //     } catch (err: unknown) {
-    //         if (err instanceof GaxiosError) {
-    //             if (
-    //                 err.response.status === 403 &&
-    //                 err.response.data.error.message === 'Forbidden' &&
-    //                 err.response.data.error.errors[0].domain === 'global' &&
-    //                 err.response.data.error.errors[0].reason === 'forbidden'
-    //             ) {
-    //                 return;
-    //             }
-
-    //             // TODO: #94 노션에서 수정된 일정이 구글 캘린더에 없을 경우의 처리 수정
-    //             if (err.response.status === 404) {
-    //                 return;
-    //             }
-    //         }
-
-    //         throw err;
-    //     }
-    // }
-
     @GoogleCalendarAPI()
     async createEvent(
         event: GoogleCalendarEventDto,
     ): Promise<GoogleCalendarEventDto> {
-        const res = await this.client.events.insert({
-            calendarId: event.calendar.googleCalendarId,
-            supportsAttachments: true,
-            requestBody: {
-                start: event.date.start,
-                end: event.date.end,
-                summary: event.summary,
-                description: event.description,
-                location: event.location,
-                status: event.status,
-                // Google Calendar에 Notion Event를 첨부하기 위한 attachments
-                attachments: [
-                    {
-                        fileUrl: `https://www.notion.so/${event.notionPageId.replaceAll(
-                            '-',
-                            '',
-                        )}`,
-                        title: event.summary,
-                        iconLink:
-                            'https://lh3.googleusercontent.com/pw/AJFCJaU8wzEWMXWYp2glnlt4vX9rdN3h4KJGpgu6zshkAEPSohFfttbcfQh_TJf1LqOwuoWvBQaVZaShLmbFfIUaZlu-kAkaeLkQSKTrMHUoIDviYIbizCzOIOwp-g2Wl6amU0LuYxkqO9kLcOe-L4o_qEg=w32-h32-s-no?authuser=0',
-                    },
-                ],
-            },
-        });
+        if (this.context.user.isSyncAdditionalProps) {
+            const res = await this.client.events.insert({
+                calendarId: event.calendar.googleCalendarId,
+                supportsAttachments: true,
+                requestBody: {
+                    start: event.date.start,
+                    end: event.date.end,
+                    summary: event.summary,
+                    description: event.description,
+                    location: event.location,
+                    status: event.status,
+                    // Google Calendar에 Notion Event를 첨부하기 위한 attachments
+                    attachments: [
+                        {
+                            fileUrl: `https://www.notion.so/${event.notionPageId.replaceAll(
+                                '-',
+                                '',
+                            )}`,
+                            title: event.summary,
+                            iconLink:
+                                'https://lh3.googleusercontent.com/pw/AJFCJaU8wzEWMXWYp2glnlt4vX9rdN3h4KJGpgu6zshkAEPSohFfttbcfQh_TJf1LqOwuoWvBQaVZaShLmbFfIUaZlu-kAkaeLkQSKTrMHUoIDviYIbizCzOIOwp-g2Wl6amU0LuYxkqO9kLcOe-L4o_qEg=w32-h32-s-no?authuser=0',
+                        },
+                    ],
+                },
+            });
 
-        return GoogleCalendarEventDto.fromGoogleCalendar(
-            res.data,
-            event.calendar,
-        );
+            return GoogleCalendarEventDto.fromGoogleCalendar(
+                res.data,
+                event.calendar,
+            );
+        } else {
+            const res = await this.client.events.insert({
+                calendarId: event.calendar.googleCalendarId,
+                supportsAttachments: true,
+                requestBody: {
+                    start: event.date.start,
+                    end: event.date.end,
+                    summary: event.summary,
+                    status: event.status,
+                    // Google Calendar에 Notion Event를 첨부하기 위한 attachments
+                    attachments: [
+                        {
+                            fileUrl: `https://www.notion.so/${event.notionPageId.replaceAll(
+                                '-',
+                                '',
+                            )}`,
+                            title: event.summary,
+                            iconLink:
+                                'https://lh3.googleusercontent.com/pw/AJFCJaU8wzEWMXWYp2glnlt4vX9rdN3h4KJGpgu6zshkAEPSohFfttbcfQh_TJf1LqOwuoWvBQaVZaShLmbFfIUaZlu-kAkaeLkQSKTrMHUoIDviYIbizCzOIOwp-g2Wl6amU0LuYxkqO9kLcOe-L4o_qEg=w32-h32-s-no?authuser=0',
+                        },
+                    ],
+                },
+            });
+
+            return GoogleCalendarEventDto.fromGoogleCalendar(
+                res.data,
+                event.calendar,
+            );
+        }
     }
 
     @GoogleCalendarAPI()
@@ -284,24 +257,50 @@ export class GoogleCalendarAssistApi {
             };
         notionAttachment.title = event.summary;
 
-        const res = await this.client.events.update({
-            calendarId: event.calendar.googleCalendarId,
-            eventId: event.googleCalendarEventId,
-            supportsAttachments: true,
-            requestBody: {
-                start: event.date.start,
-                end: event.date.end,
-                summary: event.summary,
-                description: event.description,
-                location: event.location,
-                status: event.status,
-                attachments: [...attachmentsWithoutNotion, notionAttachment],
-            },
-        });
+        if (this.context.user.isSyncAdditionalProps) {
+            const res = await this.client.events.update({
+                calendarId: event.calendar.googleCalendarId,
+                eventId: event.googleCalendarEventId,
+                supportsAttachments: true,
+                requestBody: {
+                    start: event.date.start,
+                    end: event.date.end,
+                    summary: event.summary,
+                    description: event.description,
+                    location: event.location,
+                    status: event.status,
+                    attachments: [
+                        ...attachmentsWithoutNotion,
+                        notionAttachment,
+                    ],
+                },
+            });
 
-        return GoogleCalendarEventDto.fromGoogleCalendar(
-            res.data,
-            event.calendar,
-        );
+            return GoogleCalendarEventDto.fromGoogleCalendar(
+                res.data,
+                event.calendar,
+            );
+        } else {
+            const res = await this.client.events.update({
+                calendarId: event.calendar.googleCalendarId,
+                eventId: event.googleCalendarEventId,
+                supportsAttachments: true,
+                requestBody: {
+                    start: event.date.start,
+                    end: event.date.end,
+                    summary: event.summary,
+                    status: event.status,
+                    attachments: [
+                        ...attachmentsWithoutNotion,
+                        notionAttachment,
+                    ],
+                },
+            });
+
+            return GoogleCalendarEventDto.fromGoogleCalendar(
+                res.data,
+                event.calendar,
+            );
+        }
     }
 }

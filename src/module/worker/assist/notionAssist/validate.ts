@@ -7,10 +7,11 @@ import { WorkContext } from '../../context/work.context';
 
 import { NotionAssistApi } from './api';
 import {
-    ADDABLE_REQUIRED_PROPS_TYPE_MAP,
-    ADDABLE_REQUIRED_PROPS,
-    REQUIRED_PROPS_TYPE_MAP,
-    REQUIRED_PROPS,
+    ADDABLE_PROPS_TYPE_MAP,
+    ADDABLE_NOTION_PROPS,
+    NOTION_PROPS_TYPE_MAP,
+    REQUIRED_NOTION_PROPS,
+    ADDITIONAL_NOTION_PROPS,
 } from './validate.constant';
 
 export class NotionValidation {
@@ -41,9 +42,9 @@ export class NotionValidation {
     private async validateUserProps() {
         const userProps = this.context.user.parsedNotionProps;
 
-        for (const prop of REQUIRED_PROPS) {
+        for (const prop of REQUIRED_NOTION_PROPS) {
             if (!userProps[prop]) {
-                if (contains(ADDABLE_REQUIRED_PROPS, prop)) {
+                if (contains(ADDABLE_NOTION_PROPS, prop)) {
                     await this.restoreProp(prop);
                     continue;
                 }
@@ -52,6 +53,22 @@ export class NotionValidation {
                     error: 'prop_not_exist',
                     message: `필수 속성인 ${prop} 이(가) 없습니다`,
                 });
+            }
+        }
+
+        if (this.context.user.isSyncAdditionalProps) {
+            for (const prop of ADDITIONAL_NOTION_PROPS) {
+                if (!userProps[prop]) {
+                    if (contains(ADDABLE_NOTION_PROPS, prop)) {
+                        await this.restoreProp(prop);
+                        continue;
+                    }
+
+                    this.errors.push({
+                        error: 'prop_not_exist',
+                        message: `필수 속성인 ${prop} 이(가) 없습니다`,
+                    });
+                }
             }
         }
     }
@@ -65,7 +82,7 @@ export class NotionValidation {
             );
             if (!prop) {
                 // 해당 prop이 존재 하지 않음
-                if (contains(ADDABLE_REQUIRED_PROPS, userProp)) {
+                if (contains(ADDABLE_NOTION_PROPS, userProp)) {
                     await this.restoreProp(userProp);
                     continue;
                 }
@@ -78,21 +95,21 @@ export class NotionValidation {
             }
 
             if (
-                REQUIRED_PROPS_TYPE_MAP[userProp] &&
-                prop.type !== REQUIRED_PROPS_TYPE_MAP[userProp]
+                NOTION_PROPS_TYPE_MAP[userProp] &&
+                prop.type !== NOTION_PROPS_TYPE_MAP[userProp]
             ) {
                 // 정해진 타입과 일치하지 않음
                 this.errors.push({
                     error: 'wrong_prop_type',
-                    message: `${userProp} 속성의 유형이 올바르지 않습니다. (기대한 타입: ${REQUIRED_PROPS_TYPE_MAP[userProp]}, 실제 타입: ${prop.type})`,
+                    message: `${userProp} 속성의 유형이 올바르지 않습니다. (기대한 타입: ${NOTION_PROPS_TYPE_MAP[userProp]}, 실제 타입: ${prop.type})`,
                 });
                 continue;
             }
         }
     }
 
-    private async restoreProp(prop: (typeof ADDABLE_REQUIRED_PROPS)[number]) {
-        const propType = ADDABLE_REQUIRED_PROPS_TYPE_MAP[prop];
+    private async restoreProp(prop: (typeof ADDABLE_NOTION_PROPS)[number]) {
+        const propType = ADDABLE_PROPS_TYPE_MAP[prop];
 
         const newProp = await this.api.addProp(prop, propType);
 

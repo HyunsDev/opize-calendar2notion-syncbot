@@ -54,7 +54,7 @@ export class G2NEditCase extends TestCase {
             'rich_text',
         );
         this.expect(
-            descriptionProps.rich_text[0].plain_text,
+            descriptionProps?.rich_text?.[0]?.plain_text,
             'EDITED TEST DESCRIPTION',
         );
 
@@ -64,7 +64,7 @@ export class G2NEditCase extends TestCase {
             'rich_text',
         );
         this.expect(
-            locationProps.rich_text[0].plain_text,
+            locationProps?.rich_text?.[0]?.plain_text,
             'EDITED TEST LOCATION',
         );
     }
