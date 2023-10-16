@@ -194,7 +194,9 @@ export const baseGoogleCalendarAPIErrorFilterRules: GoogleCalendarErrorFilterRul
         },
     ];
 
-export type ExtraGoogleCalendarAPIErrorFilterRuleNames = 'IGNORE_NOT_FOUND';
+export type ExtraGoogleCalendarAPIErrorFilterRuleNames =
+    | 'IGNORE_NOT_FOUND'
+    | 'IGNORE_FORBIDDEN_FOR_NON_ORGANIZER';
 
 export const extraGoogleCalendarAPIErrorFilterRules: Record<
     ExtraGoogleCalendarAPIErrorFilterRuleNames,
@@ -203,5 +205,11 @@ export const extraGoogleCalendarAPIErrorFilterRules: Record<
     IGNORE_NOT_FOUND: {
         name: 'IGNORE_NOT_FOUND',
         condition: ({ status }) => status === 404,
+    },
+    IGNORE_FORBIDDEN_FOR_NON_ORGANIZER: {
+        name: 'IGNORE_FORBIDDEN_FOR_NON_ORGANIZER',
+        condition: ({ status, data }) =>
+            status === 403 &&
+            data.error.errors[0].reason === 'forbiddenForNonOrganizer',
     },
 };
