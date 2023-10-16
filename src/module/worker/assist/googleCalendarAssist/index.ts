@@ -66,6 +66,8 @@ export class GoogleCalendarAssist extends Assist {
 
     public async updateEvent(notionEvent: NotionEventDto) {
         const event = notionEvent.toEvent();
+        if (!event.calendar || event.calendar.accessRole === 'reader') return;
+
         return await this.api.updateEvent(
             GoogleCalendarEventDto.fromEvent(event),
         );
