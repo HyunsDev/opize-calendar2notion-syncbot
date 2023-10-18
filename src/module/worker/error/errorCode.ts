@@ -19,6 +19,7 @@ const NotionAPIErrorCode = {
     UNAUTHORIZED: 'notion_api_unauthorized',
     CONFLICT_ERROR: 'notion_api_conflict_error',
     INTERNAL_SERVER_ERROR: 'notion_api_internal_server_error',
+    BAD_GATEWAY: 'notion_api_bad_gateway',
     SERVICE_UNAVAILABLE: 'notion_api_service_unavailable',
     UNKNOWN_ERROR: 'notion_api_unknown_error',
 

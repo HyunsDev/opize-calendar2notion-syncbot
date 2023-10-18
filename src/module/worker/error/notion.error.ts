@@ -47,6 +47,10 @@ const APIErrorMap: {
         message: '노션 API 서버 오류',
         finishWork: 'RETRY',
     },
+    [SyncErrorCode.notion.api.BAD_GATEWAY]: {
+        message: '노션 API 게이트웨이 오류',
+        finishWork: 'RETRY',
+    },
     [SyncErrorCode.notion.api.SERVICE_UNAVAILABLE]: {
         message: '노션 API 서버 오류',
         finishWork: 'RETRY',

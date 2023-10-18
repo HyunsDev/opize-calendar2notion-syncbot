@@ -87,6 +87,18 @@ export const baseNotionAPIErrorFilterRules: NotionAPIErrorFilterRule[] = [
         },
     },
     {
+        name: 'BAD_GATEWAY',
+        condition: (err) => err.status === 502,
+        callback: async (err, context, args) => {
+            throw new NotionAPIError({
+                code: SyncErrorCode.notion.api.BAD_GATEWAY,
+                user: context.user,
+                err,
+                args,
+            });
+        },
+    },
+    {
         name: 'SERVICE_UNAVAILABLE',
         condition: (err) => err.status === 503,
         callback: async (err, context, args) => {
