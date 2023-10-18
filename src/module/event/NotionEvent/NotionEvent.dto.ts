@@ -25,7 +25,7 @@ const getProp = <
     const prop = Object.values(page.properties).find((e) => e.id === propId);
     if (prop?.type !== type) {
         throw new Error(
-            `Property ${propId} is not of type ${type}, but ${prop.type}`,
+            `Property ${propId} is not of type ${type}, but ${prop?.type}`,
         );
     }
     return prop as Extract<P['properties'][string], { type: T }>;
@@ -86,6 +86,7 @@ export class NotionEventDto extends ProtoEvent {
         originalEvent: PageObjectResponse,
         calendar: CalendarEntity,
         props: UserNotionProps,
+        isSyncAdditionalProps: boolean,
     ) {
         const notionEvent = new NotionEventDto({
             eventSource: 'notion',
@@ -101,20 +102,22 @@ export class NotionEventDto extends ProtoEvent {
             ),
             isDeleted: getProp(originalEvent, props.delete, 'checkbox')
                 .checkbox,
-            location: props.location
-                ? getProp(
-                      originalEvent,
-                      props.location,
-                      'rich_text',
-                  ).rich_text.reduce((pre, cur) => pre + cur.plain_text, '')
-                : '',
-            description: props.description
-                ? getProp(
-                      originalEvent,
-                      props.description,
-                      'rich_text',
-                  ).rich_text.reduce((pre, cur) => pre + cur.plain_text, '')
-                : '',
+            location:
+                props.location && isSyncAdditionalProps
+                    ? getProp(
+                          originalEvent,
+                          props.location,
+                          'rich_text',
+                      ).rich_text.reduce((pre, cur) => pre + cur.plain_text, '')
+                    : '',
+            description:
+                props.description && isSyncAdditionalProps
+                    ? getProp(
+                          originalEvent,
+                          props.description,
+                          'rich_text',
+                      ).rich_text.reduce((pre, cur) => pre + cur.plain_text, '')
+                    : '',
             date: getProp(originalEvent, props.date, 'date').date,
             googleCalendarEventLink: getProp(originalEvent, props.link, 'url')
                 .url,
