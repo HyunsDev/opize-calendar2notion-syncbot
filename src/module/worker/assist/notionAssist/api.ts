@@ -88,6 +88,7 @@ export class NotionAssistApi {
                 page,
                 this.getCalendarByPageObject(page),
                 props,
+                this.context.user.isSyncAdditionalProps,
             ),
         );
     }
@@ -248,6 +249,7 @@ export class NotionAssistApi {
             res as PageObjectResponse,
             event.calendar,
             props,
+            this.context.user.isSyncAdditionalProps,
         );
     }
 
@@ -325,6 +327,7 @@ export class NotionAssistApi {
                     page,
                     this.getCalendarByPageObject(page),
                     props,
+                    this.context.user.isSyncAdditionalProps,
                 ),
             );
     }
@@ -377,6 +380,7 @@ export class NotionAssistApi {
                 page,
                 this.getCalendarByPageObject(page),
                 props,
+                this.context.user.isSyncAdditionalProps,
             ),
         );
     }
@@ -445,6 +449,7 @@ export class NotionAssistApi {
                 res as PageObjectResponse,
                 event.calendar,
                 props,
+                this.context.user.isSyncAdditionalProps,
             );
         } else {
             const res = await this.client.pages.update({
@@ -481,6 +486,7 @@ export class NotionAssistApi {
                 res as PageObjectResponse,
                 event.calendar,
                 props,
+                this.context.user.isSyncAdditionalProps,
             );
         }
     }
