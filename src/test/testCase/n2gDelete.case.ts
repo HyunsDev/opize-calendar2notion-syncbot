@@ -11,7 +11,7 @@ export class N2GDeleteCase extends TestCase {
     private eventLink: EventEntity;
 
     async init() {
-        const title = 'N2G 이벤트 수정 테스트';
+        const title = 'N2G 이벤트 삭제 테스트';
         this.notionPage = await this.ctx.notion.createTestNotionPage(title);
     }
 
