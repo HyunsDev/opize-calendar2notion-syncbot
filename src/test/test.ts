@@ -156,29 +156,34 @@ class WorkerTest {
             }`,
         );
         console.log(
-            `        ${chalk.gray('Cal Count'.padEnd(12, ' '))} ${
-                res.syncEvents.gCalCalendarCount
-            }`,
-        );
-        console.log(
-            `        ${chalk.gray('N2G Delete'.padEnd(12, ' '))} ${
-                res.eraseDeletedEvent.notion
-            }`,
-        );
-        console.log(
-            `        ${chalk.gray('N2G Count'.padEnd(12, ' '))} ${
-                res.syncEvents.notion2GCalCount
-            }`,
-        );
-        console.log(
-            `        ${chalk.gray('G2N Count'.padEnd(12, ' '))} ${
-                res.syncEvents.gCal2NotionCount
-            }`,
-        );
-        console.log(
-            `        ${chalk.gray('Result'.padEnd(12, ' '))} ${
+            `        ${chalk.gray('Sim Result'.padEnd(12, ' '))} ${
                 res.simpleResponse
             }`,
+        );
+
+        console.log(
+            `        ${chalk.gray(
+                'Result'.padEnd(12, ' '),
+            )} ${`${res.eraseDeletedEvent.notion}`.padEnd(
+                5,
+                ' ',
+            )} ${`${res.eraseDeletedEvent.eventLink}`.padEnd(
+                5,
+                ' ',
+            )} ${`${res.syncEvents.gCalCalendarCount}`.padEnd(
+                5,
+                ' ',
+            )} ${`${res.syncEvents.gCal2NotionCount}`.padEnd(
+                5,
+                ' ',
+            )} ${`${res.syncEvents.notion2GCalCount}`.padEnd(5, ' ')} ${`${
+                Object.values(res.syncNewCalendar).length
+            }`.padEnd(5, ' ')}`,
+        );
+        console.log(
+            chalk.gray(
+                `                     DelN  DelE  CalN  G2N   N2G   NewC `,
+            ),
         );
 
         return res;
