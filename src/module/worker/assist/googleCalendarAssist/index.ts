@@ -87,6 +87,21 @@ export class GoogleCalendarAssist extends Assist {
             event.eventId = eventLink.id;
             event.googleCalendarEventId = eventLink.googleCalendarEventId;
 
+            if (
+                eventLink.googleCalendarCalendarId !==
+                event.calendar.googleCalendarId
+            ) {
+                await this.api.moveEventCalendar(
+                    GoogleCalendarEventDto.fromEvent(event),
+                    event.calendar,
+                );
+
+                await this.eventLinkAssist.updateCalendar(
+                    eventLink,
+                    event.calendar,
+                );
+            }
+
             await this.api.updateEvent(GoogleCalendarEventDto.fromEvent(event));
             await this.eventLinkAssist.updateLastGCalUpdate(eventLink);
             return;
