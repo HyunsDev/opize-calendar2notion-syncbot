@@ -15,9 +15,9 @@ export const getTestUser = async () => {
     return user;
 };
 
-export const getTestCalendar = async () => {
+export const getTestCalendars = async () => {
     const userId = +process.env.TEST_USER_ID;
-    const calendars = await DB.calendar.findOne({
+    const calendars = await DB.calendar.find({
         where: {
             userId,
         },

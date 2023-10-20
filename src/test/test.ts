@@ -16,7 +16,7 @@ import { N2GCreateCase } from './testCase/n2gCreate.case';
 import { N2GDeleteCase } from './testCase/n2gDelete.case';
 import { N2GEditCase } from './testCase/n2gEdit.case';
 import { log } from './utils/log';
-import { getTestCalendar, getTestUser, sleep1m } from './utils/utils';
+import { getTestCalendars, getTestUser, sleep1m } from './utils/utils';
 
 const TEST_CASE = [
     N2GCreateCase,
@@ -45,8 +45,9 @@ class WorkerTest {
     private async testInit() {
         await AppDataSource.initialize();
         const user = await getTestUser();
-        const calendar = await getTestCalendar();
-        this.ctx = new TestContext(user, calendar);
+        const calendars = await getTestCalendars();
+
+        this.ctx = new TestContext(user, calendars[0], calendars[1]);
         for (const Case of TEST_CASE) {
             this.cases.push(new Case(this.ctx));
         }
