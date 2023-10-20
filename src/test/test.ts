@@ -12,6 +12,7 @@ import { TestCase } from './testCase/Case';
 import { G2NCreateCase } from './testCase/g2nCreate.case';
 import { G2NDeleteCase } from './testCase/g2nDelete.case';
 import { G2NEditCase } from './testCase/g2nEdit.case';
+import { G2NMoveCalendarCase } from './testCase/g2nMoveCalendar.case';
 import { N2GCreateCase } from './testCase/n2gCreate.case';
 import { N2GDeleteCase } from './testCase/n2gDelete.case';
 import { N2GEditCase } from './testCase/n2gEdit.case';
@@ -27,6 +28,7 @@ const TEST_CASE = [
     N2GDeleteCase,
     G2NDeleteCase,
     N2GMoveCalendarCase,
+    G2NMoveCalendarCase,
 ] as const;
 
 class WorkerTest {
@@ -144,11 +146,41 @@ class WorkerTest {
 
     private async runWorker(step: string) {
         await sleep1m();
-        log.run('run', step);
         const worker = new Worker(this.ctx.user.id, 'test');
         const res = await worker.run();
-        log.run('finish', step);
-        console.log('');
+
+        console.log(`    ${chalk.bgBlue(' WORK ')} ${step}`);
+        console.log(
+            `        ${chalk.gray('Success'.padEnd(12, ' '))} ${
+                res.fail ? '❌' : '✅'
+            }`,
+        );
+        console.log(
+            `        ${chalk.gray('Cal Count'.padEnd(12, ' '))} ${
+                res.syncEvents.gCalCalendarCount
+            }`,
+        );
+        console.log(
+            `        ${chalk.gray('N2G Delete'.padEnd(12, ' '))} ${
+                res.eraseDeletedEvent.notion
+            }`,
+        );
+        console.log(
+            `        ${chalk.gray('N2G Count'.padEnd(12, ' '))} ${
+                res.syncEvents.notion2GCalCount
+            }`,
+        );
+        console.log(
+            `        ${chalk.gray('G2N Count'.padEnd(12, ' '))} ${
+                res.syncEvents.gCal2NotionCount
+            }`,
+        );
+        console.log(
+            `        ${chalk.gray('Result'.padEnd(12, ' '))} ${
+                res.simpleResponse
+            }`,
+        );
+
         return res;
     }
 }

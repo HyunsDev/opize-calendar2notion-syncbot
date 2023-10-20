@@ -66,14 +66,15 @@ export abstract class TestCase {
             console.log(`    ${chalk.bgGreen(' PASS ')} ${this.name}`);
         } else {
             console.log(`    ${chalk.bgRed(' FAIL ')} ${this.name}`);
+            this.result.forEach((result) => {
+                console.log(
+                    `        ${result.pass ? '✅' : '❌'} ${chalk.gray(
+                        result.message,
+                    )}`,
+                );
+            });
         }
-        this.result.forEach((result) => {
-            console.log(
-                `        ${result.pass ? '✅' : '❌'} ${chalk.gray(
-                    result.message,
-                )}`,
-            );
-        });
+
         console.log('');
     }
 

@@ -85,6 +85,14 @@ export class TestGCalService {
         });
     }
 
+    async moveTestGoogleCalendarEvent(eventId: string) {
+        return await this.googleCalendarClient.events.move({
+            calendarId: this.ctx.calendar.googleCalendarId,
+            eventId: eventId,
+            destination: this.ctx.calendar2.googleCalendarId,
+        });
+    }
+
     async getEvent(eventId: string, calendar: CalendarEntity) {
         try {
             const event = await this.googleCalendarClient.events.get({
