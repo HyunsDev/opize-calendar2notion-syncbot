@@ -108,9 +108,15 @@ export class TestGCalService {
     }
 
     async deleteEvent(eventId: string) {
-        return await this.googleCalendarClient.events.delete({
-            calendarId: this.ctx.calendar.googleCalendarId,
-            eventId: eventId,
-        });
+        try {
+            return await this.googleCalendarClient.events.delete({
+                calendarId: this.ctx.calendar.googleCalendarId,
+                eventId: eventId,
+            });
+        } catch (err) {
+            if (err instanceof GaxiosError && err.response.status === 410) {
+                return null;
+            } else throw err;
+        }
     }
 }

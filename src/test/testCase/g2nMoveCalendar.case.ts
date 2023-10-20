@@ -51,7 +51,7 @@ export class G2NMoveCalendarCase extends TestCase {
             eventLink.googleCalendarEventId,
             this.ctx.calendar,
         );
-        this.expect(oldGCalEvent.data, null);
+        this.expect(oldGCalEvent.data.status, 'cancelled');
 
         const newGCalEvent = await this.ctx.gcal.getEvent(
             eventLink.googleCalendarEventId,

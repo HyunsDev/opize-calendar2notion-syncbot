@@ -68,14 +68,14 @@ class WorkerTest {
             }`,
         );
         console.log(
-            `    ${chalk.gray('Cal ID'.padEnd(12, ' '))} ${
-                this.ctx.calendar.googleCalendarId
-            }`,
+            `    ${chalk.gray('Calendar 1'.padEnd(12, ' '))}  ${
+                this.ctx.calendar.googleCalendarName
+            } (${this.ctx.calendar.googleCalendarId})`,
         );
         console.log(
-            `    ${chalk.gray('Cal Name'.padEnd(12, ' '))} ${
-                this.ctx.calendar.googleCalendarName
-            }`,
+            `    ${chalk.gray('Calendar 2'.padEnd(12, ' '))}  ${
+                this.ctx.calendar2.googleCalendarName
+            } (${this.ctx.calendar2.googleCalendarId})`,
         );
         console.log(
             `    ${chalk.gray(
