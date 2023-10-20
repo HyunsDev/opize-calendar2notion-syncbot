@@ -25,6 +25,7 @@ export class N2GDeleteCase extends TestCase {
     async validate(result: WorkerResult) {
         const gcalEvent = await this.ctx.gcal.getEvent(
             this?.eventLink?.googleCalendarEventId || '',
+            this.ctx.calendar,
         );
 
         this.expect(result.fail, false);

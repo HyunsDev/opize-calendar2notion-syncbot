@@ -1,4 +1,4 @@
-import { UserEntity } from '@opize/calendar2notion-object';
+import { CalendarEntity, UserEntity } from '@opize/calendar2notion-object';
 import dayjs from 'dayjs';
 import { calendar_v3, google } from 'googleapis';
 import { GaxiosError } from 'googleapis-common';
@@ -85,10 +85,10 @@ export class TestGCalService {
         });
     }
 
-    async getEvent(eventId: string) {
+    async getEvent(eventId: string, calendar: CalendarEntity) {
         try {
             const event = await this.googleCalendarClient.events.get({
-                calendarId: this.ctx.calendar.googleCalendarId,
+                calendarId: calendar.googleCalendarId,
                 eventId: eventId,
             });
             return event;

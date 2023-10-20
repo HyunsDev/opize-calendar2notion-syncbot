@@ -29,7 +29,10 @@ export abstract class TestCase {
     abstract name: string;
 
     protected ctx: TestContext;
-    protected result: string[];
+    protected result: {
+        pass: boolean;
+        message: string;
+    }[];
 
     constructor(ctx: TestContext) {
         this.ctx = ctx;
@@ -59,14 +62,18 @@ export abstract class TestCase {
         this.result = [];
         await this.validate(result);
 
-        if (this.result.length === 0) {
+        if (this.result.every((e) => e.pass)) {
             console.log(`    ${chalk.bgGreen(' PASS ')} ${this.name}`);
         } else {
             console.log(`    ${chalk.bgRed(' FAIL ')} ${this.name}`);
-            this.result.forEach((message) => {
-                console.log(`        ❌ ${chalk.gray(message)}`);
-            });
         }
+        this.result.forEach((result) => {
+            console.log(
+                `        ${result.pass ? '✅' : '❌'} ${chalk.gray(
+                    result.message,
+                )}`,
+            );
+        });
         console.log('');
     }
 
@@ -75,31 +82,55 @@ export abstract class TestCase {
             switch (expected) {
                 case EXPECTED_RULE.NOT_NULL:
                     if (!value) {
-                        this.result.push(
-                            `Expected ${chalk.white(
+                        this.result.push({
+                            pass: false,
+                            message: `Expected ${chalk.white(
                                 'not null',
                             )} but got ${chalk.white(value)}.`,
-                        );
+                        });
+                    } else {
+                        this.result.push({
+                            pass: true,
+                            message: `Expected ${chalk.white(
+                                'not null',
+                            )} and got ${chalk.white(value)}.`,
+                        });
                     }
                     break;
 
                 case EXPECTED_RULE.NULL:
                     if (value) {
-                        this.result.push(
-                            `Expected ${chalk.white(
+                        this.result.push({
+                            pass: false,
+                            message: `Expected ${chalk.white(
                                 'null',
                             )} but got ${chalk.white(value)}.`,
-                        );
+                        });
+                    } else {
+                        this.result.push({
+                            pass: true,
+                            message: `Expected ${chalk.white(
+                                'null',
+                            )} and got ${chalk.white(value)}.`,
+                        });
                     }
                     break;
             }
         } else {
             if (value !== expected) {
-                this.result.push(
-                    `Expected ${chalk.white(expected)} but got ${chalk.white(
-                        value,
-                    )} instead.`,
-                );
+                this.result.push({
+                    pass: false,
+                    message: `Expected ${chalk.white(
+                        expected,
+                    )} but got ${chalk.white(value)} instead.`,
+                });
+            } else {
+                this.result.push({
+                    pass: true,
+                    message: `Expected ${chalk.white(
+                        expected,
+                    )} and got ${chalk.white(value)}.`,
+                });
             }
         }
     }

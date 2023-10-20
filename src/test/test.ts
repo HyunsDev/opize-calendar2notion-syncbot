@@ -15,6 +15,7 @@ import { G2NEditCase } from './testCase/g2nEdit.case';
 import { N2GCreateCase } from './testCase/n2gCreate.case';
 import { N2GDeleteCase } from './testCase/n2gDelete.case';
 import { N2GEditCase } from './testCase/n2gEdit.case';
+import { N2GMoveCalendarCase } from './testCase/n2gMoveCalendar.case';
 import { log } from './utils/log';
 import { getTestCalendars, getTestUser, sleep1m } from './utils/utils';
 
@@ -25,6 +26,7 @@ const TEST_CASE = [
     G2NEditCase,
     N2GDeleteCase,
     G2NDeleteCase,
+    N2GMoveCalendarCase,
 ] as const;
 
 class WorkerTest {
@@ -51,6 +53,8 @@ class WorkerTest {
         for (const Case of TEST_CASE) {
             this.cases.push(new Case(this.ctx));
         }
+
+        console.clear();
 
         console.log(chalk.bgWhite.black(` TEST `) + ` ${user.name}`);
         console.log(

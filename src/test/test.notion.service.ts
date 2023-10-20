@@ -13,7 +13,7 @@ function isPropType<T extends PageObjectResponse['properties'][string]['type']>(
     return obj.type === type;
 }
 
-export const getProps = <
+export const getProp = <
     T extends PageObjectResponse['properties'][string]['type'] = 'title',
 >(
     page: PageObjectResponse,
@@ -147,6 +147,21 @@ export class TestNotionService {
                             },
                         },
                     ],
+                },
+            },
+        });
+    }
+
+    async moveCalendar(pageId: string) {
+        const props = this.ctx.user.parsedNotionProps;
+        return await this.notionClient.pages.update({
+            page_id: pageId,
+            properties: {
+                [props.calendar]: {
+                    type: 'select',
+                    select: {
+                        name: this.ctx.calendar2.googleCalendarName,
+                    },
                 },
             },
         });

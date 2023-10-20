@@ -3,7 +3,7 @@ import { calendar_v3 } from 'googleapis';
 
 import { WorkerResult } from '@/module/worker/types/result';
 
-import { getProps } from '../test.notion.service';
+import { getProp } from '../test.notion.service';
 
 import { EXPECTED_RULE, TestCase } from './Case';
 
@@ -48,7 +48,7 @@ export class G2NEditCase extends TestCase {
             true,
         );
 
-        const descriptionProps = getProps(
+        const descriptionProps = getProp(
             notionPage as PageObjectResponse,
             props.description,
             'rich_text',
@@ -58,7 +58,7 @@ export class G2NEditCase extends TestCase {
             'EDITED TEST DESCRIPTION',
         );
 
-        const locationProps = getProps(
+        const locationProps = getProp(
             notionPage as PageObjectResponse,
             props.location,
             'rich_text',

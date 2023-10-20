@@ -27,6 +27,7 @@ export class N2GEditCase extends TestCase {
         );
         const gcalEvent = await this.ctx.gcal.getEvent(
             eventLink.googleCalendarEventId,
+            this.ctx.calendar,
         );
 
         this.expect(result.fail, false);
