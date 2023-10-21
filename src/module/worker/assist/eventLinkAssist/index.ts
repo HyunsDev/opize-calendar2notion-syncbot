@@ -79,17 +79,38 @@ export class EventLinkAssist extends Assist {
     ) {
         eventLink.calendar = calendar;
         eventLink.googleCalendarCalendarId = calendar.googleCalendarId;
-        return await DB.event.save(eventLink);
+
+        await DB.event.update(
+            {
+                id: eventLink.id,
+            },
+            {
+                calendar,
+                googleCalendarCalendarId: calendar.googleCalendarId,
+            },
+        );
     }
 
     public async updateLastNotionUpdate(eventLink: EventEntity) {
-        eventLink.lastNotionUpdate = dayjs().toDate();
-        return await DB.event.save(eventLink);
+        await DB.event.update(
+            {
+                id: eventLink.id,
+            },
+            {
+                lastNotionUpdate: dayjs().toDate(),
+            },
+        );
     }
 
     public async updateLastGCalUpdate(eventLink: EventEntity) {
-        eventLink.lastGoogleCalendarUpdate = dayjs().toDate();
-        return await DB.event.save(eventLink);
+        await DB.event.update(
+            {
+                id: eventLink.id,
+            },
+            {
+                lastGoogleCalendarUpdate: dayjs().toDate(),
+            },
+        );
     }
 
     public async create(event: EventDto) {
