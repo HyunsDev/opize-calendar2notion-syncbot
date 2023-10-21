@@ -67,6 +67,8 @@ export class NotionEventDto extends ProtoEvent {
             googleCalendarEventId: event.googleCalendarEventId,
             calendar: event.calendar,
             notionPageId: event.notionPageId,
+            updatedAt: event.updatedAt,
+            eventLink: event.eventLink,
 
             title: event.title,
             isDeleted: event.status === 'cancelled',
@@ -95,6 +97,7 @@ export class NotionEventDto extends ProtoEvent {
             notionPageId: originalEvent.id,
             googleCalendarEventId: undefined,
             calendar,
+            updatedAt: new Date(originalEvent.last_edited_time),
 
             title: getProp(originalEvent, props.title, 'title').title.reduce(
                 (pre, cur) => pre + cur.plain_text,
@@ -135,6 +138,8 @@ export class NotionEventDto extends ProtoEvent {
             googleCalendarEventId: this.googleCalendarEventId,
             notionPageId: this.notionPageId,
             calendar: this.calendar,
+            updatedAt: this.updatedAt,
+            eventLink: this.eventLink,
 
             title: this.title,
             status: this.isDeleted ? 'cancelled' : 'confirmed',
@@ -222,12 +227,12 @@ export class NotionEventDto extends ProtoEvent {
             return {
                 start: date.start,
                 end: date.end,
-                // time_zone: hasTime ? 'Asia/Seoul' : null,
+                // time_zone: hasTime ? 'UTC' : null,
             };
         } else {
             return {
                 start: date.start,
-                // time_zone: hasTime ? 'Asia/Seoul' : null,
+                // time_zone: hasTime ? 'UTC' : null,
             };
         }
     }

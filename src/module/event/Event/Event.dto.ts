@@ -46,6 +46,8 @@ export class EventDto extends ProtoEvent {
                 event.googleCalendarEventId || this.googleCalendarEventId,
             calendar: event.calendar || this.calendar,
             notionPageId: event.notionPageId || this.notionPageId,
+            updatedAt: event.updatedAt || this.updatedAt,
+            eventLink: event.eventLink || this.eventLink,
 
             title: event.title || this.title,
             status: event.status || this.status,
@@ -62,5 +64,28 @@ export class EventDto extends ProtoEvent {
                 this.originalGoogleCalendarEvent,
         });
         return mergedEvent;
+    }
+
+    isDifferentCalendarId() {
+        return (
+            this.eventLink.googleCalendarCalendarId !==
+            this.calendar.googleCalendarId
+        );
+    }
+
+    isNewEvent() {
+        return !(
+            this.eventLink &&
+            this.eventLink.googleCalendarEventId &&
+            this.eventLink.notionPageId
+        );
+    }
+
+    isDeletedEvent() {
+        return this.status === 'cancelled';
+    }
+
+    isReadOnly() {
+        return this.calendar?.accessRole === 'reader';
     }
 }

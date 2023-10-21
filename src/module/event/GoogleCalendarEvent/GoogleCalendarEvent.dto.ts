@@ -45,6 +45,8 @@ export class GoogleCalendarEventDto extends ProtoEvent {
             notionPageId: event.notionPageId,
             googleCalendarEventId: event.googleCalendarEventId,
             calendar: event.calendar,
+            updatedAt: event.updatedAt,
+            eventLink: event.eventLink,
 
             date: event.date,
             status: event.status,
@@ -70,6 +72,8 @@ export class GoogleCalendarEventDto extends ProtoEvent {
             notionPageId: undefined,
             googleCalendarEventId: originalEvent.id,
             calendar,
+            updatedAt: new Date(originalEvent.updated),
+
             date: GoogleCalendarEventDto.convertDateFromEvent({
                 start: originalEvent.start,
                 end: originalEvent.end,
@@ -96,6 +100,8 @@ export class GoogleCalendarEventDto extends ProtoEvent {
             notionPageId: this.notionPageId,
             googleCalendarEventId: this.googleCalendarEventId,
             calendar: this.calendar,
+            updatedAt: this.updatedAt,
+            eventLink: this.eventLink,
 
             date: GoogleCalendarEventDto.convertDateToEvent(this.date),
             status: this.status,

@@ -1,4 +1,5 @@
 import { CalendarEntity, EventEntity } from '@opize/calendar2notion-object';
+import dayjs from 'dayjs';
 
 import { DB } from '@/database';
 import { EventDto } from '@/module/event';
@@ -28,15 +29,31 @@ export class EventLinkAssist extends Assist {
         });
     }
 
-    public async findByGCalEvent(gCalEventId: string, gCalCalendarId: string) {
-        return await DB.event.findOne({
+    /**
+     *
+     */
+    public async findByGCalEvent(gCalEventId: string) {
+        const res = await DB.event.find({
             where: {
-                googleCalendarCalendarId: gCalCalendarId,
                 googleCalendarEventId: gCalEventId,
                 userId: this.context.user.id,
             },
+            order: {
+                lastGoogleCalendarUpdate: 'DESC',
+            },
             relations: ['calendar'],
         });
+
+        if (res.length > 1) {
+            for (const eventLink of res.slice(1)) {
+                await DB.event.delete({
+                    id: eventLink.id,
+                });
+                return eventLink;
+            }
+        }
+
+        return res[0];
     }
 
     public async findDeletedEventLinks() {
@@ -66,12 +83,12 @@ export class EventLinkAssist extends Assist {
     }
 
     public async updateLastNotionUpdate(eventLink: EventEntity) {
-        eventLink.lastNotionUpdate = this.context.period.end;
+        eventLink.lastNotionUpdate = dayjs().toDate();
         return await DB.event.save(eventLink);
     }
 
     public async updateLastGCalUpdate(eventLink: EventEntity) {
-        eventLink.lastGoogleCalendarUpdate = this.context.period.end;
+        eventLink.lastGoogleCalendarUpdate = dayjs().toDate();
         return await DB.event.save(eventLink);
     }
 
@@ -79,8 +96,8 @@ export class EventLinkAssist extends Assist {
         let eventLink = EventEntity.create({
             googleCalendarEventId: event.googleCalendarEventId,
             googleCalendarCalendarId: event.calendar.googleCalendarId,
-            lastGoogleCalendarUpdate: this.context.period.end,
-            lastNotionUpdate: this.context.period.end,
+            lastGoogleCalendarUpdate: dayjs().toDate(),
+            lastNotionUpdate: dayjs().toDate(),
             status: 'SYNCED',
             willRemove: false,
             notionPageId: event.notionPageId,

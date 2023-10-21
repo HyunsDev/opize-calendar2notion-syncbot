@@ -7,7 +7,7 @@ import { WorkerResult } from '@/module/worker/types/result';
 
 import { getProp } from '../test.notion.service';
 
-import { EXPECTED_RULE, TestCase } from './Case';
+import { TestCase } from './Case';
 
 export class N2GMoveCalendarCase extends TestCase {
     name = 'N2GMoveCalendarCase';
@@ -38,13 +38,13 @@ export class N2GMoveCalendarCase extends TestCase {
             eventLink.googleCalendarEventId,
             this.ctx.calendar,
         );
-        this.expect(oldGCalEvent.data, null);
+        this.expect(oldGCalEvent.data.status, 'cancelled');
 
         const newGCalEvent = await this.ctx.gcal.getEvent(
             eventLink.googleCalendarEventId,
             this.ctx.calendar2,
         );
-        this.expect(newGCalEvent?.data, EXPECTED_RULE.NOT_NULL);
+        this.expect(newGCalEvent?.data.status, 'confirmed');
 
         // 노션 페이지 검증
         const notionPage = await this.ctx.notion.getPage(this.notionPage.id);

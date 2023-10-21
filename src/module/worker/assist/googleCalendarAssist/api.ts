@@ -149,14 +149,17 @@ export class GoogleCalendarAssistApi {
     @GoogleCalendarAPI()
     async moveEventCalendar(
         event: GoogleCalendarEventDto,
-        newCalendar: CalendarEntity,
+        beforeCalendar: CalendarEntity,
     ) {
         const res = await this.client.events.move({
             eventId: event.googleCalendarEventId,
-            calendarId: event.calendar.googleCalendarId,
-            destination: newCalendar.googleCalendarId,
+            calendarId: beforeCalendar.googleCalendarId,
+            destination: event.calendar.googleCalendarId,
         });
-        return GoogleCalendarEventDto.fromGoogleCalendar(res.data, newCalendar);
+        return GoogleCalendarEventDto.fromGoogleCalendar(
+            res.data,
+            event.calendar,
+        );
     }
 
     @GoogleCalendarAPI()

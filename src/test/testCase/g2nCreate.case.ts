@@ -21,6 +21,9 @@ export class G2NCreateCase extends TestCase {
         const eventLink = await this.ctx.service.getEventLinkFromGoogleEventId(
             this.gCalEvent.id,
         );
+        this.expect(eventLink, EXPECTED_RULE.NOT_NULL);
+        if (!eventLink) return;
+
         const notionPage = await this.ctx.notion.getPage(
             eventLink.notionPageId,
         );

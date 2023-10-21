@@ -40,33 +40,49 @@ export class G2NEditCase extends TestCase {
         this.expect(result.syncEvents.gCal2NotionCount > 0, true);
         this.expect(notionPage?.id, EXPECTED_RULE.NOT_NULL);
 
-        const titleProps = (notionPage as PageObjectResponse).properties?.title;
+        // NOTION
         this.expect(
-            titleProps.type === 'title' &&
-                titleProps.title[0].plain_text ===
-                    'G2N 이벤트 수정 테스트 (수정됨)',
-            true,
+            getProp(notionPage as PageObjectResponse, props.title, 'title')
+                .title.map((v) => v.plain_text)
+                .join(''),
+            'G2N 이벤트 수정 테스트 (수정됨)',
         );
 
-        const descriptionProps = getProp(
-            notionPage as PageObjectResponse,
-            props.description,
-            'rich_text',
-        );
         this.expect(
-            descriptionProps?.rich_text?.[0]?.plain_text,
+            getProp(
+                notionPage as PageObjectResponse,
+                props.description,
+                'rich_text',
+            )
+                .rich_text.map((v) => v.plain_text)
+                .join(''),
             'EDITED TEST DESCRIPTION',
         );
 
-        const locationProps = getProp(
-            notionPage as PageObjectResponse,
-            props.location,
-            'rich_text',
-        );
         this.expect(
-            locationProps?.rich_text?.[0]?.plain_text,
+            getProp(
+                notionPage as PageObjectResponse,
+                props.location,
+                'rich_text',
+            )
+                .rich_text.map((v) => v.plain_text)
+                .join(''),
             'EDITED TEST LOCATION',
         );
+
+        // google calendar
+        const gCalEvent = await this.ctx.gcal.getEvent(
+            eventLink.googleCalendarEventId,
+            this.ctx.calendar,
+        );
+
+        this.expect(gCalEvent?.data, EXPECTED_RULE.NOT_NULL);
+        this.expect(
+            gCalEvent?.data?.summary,
+            'G2N 이벤트 수정 테스트 (수정됨)',
+        );
+        this.expect(gCalEvent?.data?.description, 'EDITED TEST DESCRIPTION');
+        this.expect(gCalEvent?.data?.location, 'EDITED TEST LOCATION');
     }
 
     async cleanUp() {

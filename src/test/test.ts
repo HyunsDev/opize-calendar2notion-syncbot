@@ -68,12 +68,12 @@ class WorkerTest {
             }`,
         );
         console.log(
-            `    ${chalk.gray('Calendar 1'.padEnd(12, ' '))}  ${
+            `    ${chalk.gray('Calendar 1'.padEnd(12, ' '))} ${
                 this.ctx.calendar.googleCalendarName
             } (${this.ctx.calendar.googleCalendarId})`,
         );
         console.log(
-            `    ${chalk.gray('Calendar 2'.padEnd(12, ' '))}  ${
+            `    ${chalk.gray('Calendar 2'.padEnd(12, ' '))} ${
                 this.ctx.calendar2.googleCalendarName
             } (${this.ctx.calendar2.googleCalendarId})`,
         );
