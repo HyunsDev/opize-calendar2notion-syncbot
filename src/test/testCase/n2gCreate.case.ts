@@ -1,10 +1,11 @@
 import dayjs from 'dayjs';
 
 import { WorkerResult } from '@/module/worker/types/result';
+import { getProp } from '@/utils/getProp';
 
 import { TestEventData } from '../class/TestEventData';
 import { TestNotionPage } from '../class/TestNotionPage';
-import { getProp, richText } from '../test.notion.service';
+import { richText } from '../test.notion.service';
 
 import { EXPECTED_RULE, TestCase } from './Case';
 

@@ -6,6 +6,8 @@ import utc from 'dayjs/plugin/utc';
 dayjs.extend(timezone);
 dayjs.extend(utc);
 
+import { getProp } from '@/utils/getProp';
+
 import { EventDateTime, EventDto } from '../Event';
 import {
     ProtoEvent,
@@ -13,23 +15,6 @@ import {
 } from '../ProtoEvent/ProtoEvent';
 
 import { NotionDateTime } from './NotionDateTime.type';
-
-const getProp = <
-    P extends PageObjectResponse,
-    T extends P['properties'][string]['type'],
->(
-    page: P,
-    propId: string,
-    type: T,
-): Extract<P['properties'][string], { type: T }> => {
-    const prop = Object.values(page.properties).find((e) => e.id === propId);
-    if (prop?.type !== type) {
-        throw new Error(
-            `Property ${propId} is not of type ${type}, but ${prop?.type}`,
-        );
-    }
-    return prop as Extract<P['properties'][string], { type: T }>;
-};
 
 export interface NotionEventConstructorProps
     extends ProtoEventConstructorProps {

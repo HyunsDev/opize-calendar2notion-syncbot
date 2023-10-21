@@ -2,10 +2,11 @@ import { PageObjectResponse } from '@notionhq/client/build/src/api-endpoints';
 import dayjs from 'dayjs';
 
 import { WorkerResult } from '@/module/worker/types/result';
+import { getProp } from '@/utils/getProp';
 
 import { TestEventData } from '../class/TestEventData';
 import { TestGCalEvent } from '../class/TestGCalEvent';
-import { getProp, richText } from '../test.notion.service';
+import { richText } from '../test.notion.service';
 
 import { EXPECTED_RULE, TestCase } from './Case';
 
