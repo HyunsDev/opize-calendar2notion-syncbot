@@ -16,7 +16,7 @@ const PAGE1: TestEventData = {
             date: NOW.format('YYYY-MM-DD'),
         },
         end: {
-            date: NOW.format('YYYY-MM-DD'),
+            date: NOW.add(1, 'day').format('YYYY-MM-DD'),
         },
     },
     location: 'TEST LOCATION',

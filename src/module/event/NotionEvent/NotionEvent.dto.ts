@@ -154,57 +154,42 @@ export class NotionEventDto extends ProtoEvent {
     }
 
     static convertDateToEvent(notionDate: NotionDateTime) {
-        const date: EventDateTime = {
-            start: {},
-            end: {},
+        const isAllDay = notionDate.start.length === 10;
+        const start = {
+            date: isAllDay ? notionDate.start : null,
+            dateTime: isAllDay ? null : notionDate.start,
         };
-
-        if (notionDate.start.length === 10) {
-            date.start = {
-                date: notionDate.start,
-            };
-        } else {
-            date.start = {
-                dateTime: notionDate.start,
-            };
-        }
-
-        if (notionDate.end) {
-            if (notionDate.end.length === 10) {
-                date.end = {
-                    date: notionDate.end,
-                };
-            } else {
-                date.end = {
-                    dateTime: notionDate.end,
-                };
-            }
-        } else {
-            if (notionDate.start.length === 10) {
-                date.end = {
-                    date: notionDate.start,
-                };
-            } else {
-                date.end = {
-                    dateTime: notionDate.start,
-                };
-            }
-        }
-
+        const end = {
+            date: isAllDay
+                ? dayjs(notionDate.end || notionDate.start)
+                      .add(1, 'day')
+                      .format('YYYY-MM-DD')
+                : null,
+            dateTime: isAllDay ? null : notionDate.end || notionDate.start,
+        };
+        const date = {
+            start,
+            end,
+        };
         return date;
     }
 
     static convertDateFromEvent(eventDate: EventDateTime): NotionDateTime {
         const isAllDay = 'date' in eventDate.start;
         const isOneDay =
-            isAllDay && eventDate.start.date === eventDate.end.date;
+            isAllDay &&
+            dayjs(eventDate.start.date) ===
+                dayjs(eventDate.end.date).add(-1, 'day');
 
         const start = isAllDay
             ? dayjs(eventDate.start.date).utc().format('YYYY-MM-DD')
             : dayjs(eventDate.start.dateTime).utc().toISOString();
 
         const end = isAllDay
-            ? dayjs(eventDate.end.date).utc().format('YYYY-MM-DD')
+            ? dayjs(eventDate.end.date)
+                  .add(-1, 'day')
+                  .utc()
+                  .format('YYYY-MM-DD')
             : dayjs(eventDate.end.dateTime).utc().toISOString();
 
         if (isOneDay) {
