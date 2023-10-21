@@ -1,5 +1,8 @@
 import { APIResponseError, Client } from '@notionhq/client';
-import { PageObjectResponse } from '@notionhq/client/build/src/api-endpoints';
+import {
+    PageObjectResponse,
+    RichTextItemResponse,
+} from '@notionhq/client/build/src/api-endpoints';
 import { CalendarEntity } from '@opize/calendar2notion-object';
 
 import { NotionDateTime } from '@/module/event';
@@ -23,6 +26,26 @@ export const getProp = <
     const prop = Object.values(page.properties).find((e) => e.id === propId);
     if (isPropType(prop, type)) {
         return prop;
+    } else {
+        throw new Error('Invalid prop type');
+    }
+};
+
+export const richText = (
+    prop:
+        | {
+              type: 'rich_text';
+              rich_text: RichTextItemResponse[];
+          }
+        | {
+              type: 'title';
+              title: RichTextItemResponse[];
+          },
+) => {
+    if (prop.type === 'rich_text') {
+        return prop.rich_text.map((t) => t.plain_text).join('');
+    } else if (prop.type === 'title') {
+        return prop.title.map((t) => t.plain_text).join('');
     } else {
         throw new Error('Invalid prop type');
     }
@@ -176,9 +199,9 @@ export class TestNotionService {
 
     async getPage(pageId: string) {
         try {
-            return await this.notionClient.pages.retrieve({
+            return (await this.notionClient.pages.retrieve({
                 page_id: pageId,
-            });
+            })) as PageObjectResponse;
         } catch (err) {
             if (err instanceof APIResponseError && err.status === 404) {
                 return null;

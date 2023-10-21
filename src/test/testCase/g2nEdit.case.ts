@@ -5,7 +5,7 @@ import { WorkerResult } from '@/module/worker/types/result';
 
 import { TestEventData } from '../class/TestEventData';
 import { TestGCalEvent } from '../class/TestGCalEvent';
-import { getProp } from '../test.notion.service';
+import { getProp, richText } from '../test.notion.service';
 
 import { EXPECTED_RULE, TestCase } from './Case';
 
@@ -56,9 +56,9 @@ export class G2NEditCase extends TestCase {
         const props = this.ctx.user.parsedNotionProps;
 
         const eventLink = await this.gCalEvent.getEventLink();
-        const notionPage = await this.ctx.notion.getPage(
+        const notionPage = (await this.ctx.notion.getPage(
             eventLink.notionPageId,
-        );
+        )) as PageObjectResponse;
 
         this.expect(result.fail, false);
         this.expect(result.syncEvents.gCal2NotionCount > 0, true);
@@ -66,31 +66,17 @@ export class G2NEditCase extends TestCase {
 
         // NOTION
         this.expect(
-            getProp(notionPage as PageObjectResponse, props.title, 'title')
-                .title.map((v) => v.plain_text)
-                .join(''),
+            richText(getProp(notionPage, props.title, 'title')),
             'G2N 이벤트 수정 테스트 (수정됨)',
         );
 
         this.expect(
-            getProp(
-                notionPage as PageObjectResponse,
-                props.description,
-                'rich_text',
-            )
-                .rich_text.map((v) => v.plain_text)
-                .join(''),
+            richText(getProp(notionPage, props.description, 'rich_text')),
             'EDITED TEST DESCRIPTION',
         );
 
         this.expect(
-            getProp(
-                notionPage as PageObjectResponse,
-                props.location,
-                'rich_text',
-            )
-                .rich_text.map((v) => v.plain_text)
-                .join(''),
+            richText(getProp(notionPage, props.location, 'rich_text')),
             'EDITED TEST LOCATION',
         );
 

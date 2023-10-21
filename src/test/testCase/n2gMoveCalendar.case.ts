@@ -4,7 +4,7 @@ import { WorkerResult } from '@/module/worker/types/result';
 
 import { TestEventData } from '../class/TestEventData';
 import { TestNotionPage } from '../class/TestNotionPage';
-import { getProp } from '../test.notion.service';
+import { getProp, richText } from '../test.notion.service';
 
 import { TestCase } from './Case';
 
@@ -66,23 +66,15 @@ export class N2GMoveCalendarCase extends TestCase {
             this.ctx.calendar2.googleCalendarName,
         );
         this.expect(
-            getProp(notionPage, props.title, 'title')
-                .title.map((t) => t.plain_text)
-                .join(''),
+            richText(getProp(notionPage, props.title, 'title')),
             PAGE1.title,
         );
-
         this.expect(
-            getProp(notionPage, props.description, 'rich_text')
-                .rich_text.map((t) => t.plain_text)
-                .join(''),
+            richText(getProp(notionPage, props.description, 'rich_text')),
             PAGE1.description,
         );
-
         this.expect(
-            getProp(notionPage, props.location, 'rich_text')
-                .rich_text.map((t) => t.plain_text)
-                .join(''),
+            richText(getProp(notionPage, props.location, 'rich_text')),
             PAGE1.location,
         );
     }

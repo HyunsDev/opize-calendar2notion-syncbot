@@ -46,12 +46,18 @@ export class G2NDeleteCase extends TestCase {
             return;
         }
 
+        this.expect(result.fail, false);
+        this.expect(result.syncEvents.gCal2NotionCount > 0, true);
+
+        // 노션 페이지 검증
         const notionPage = await this.ctx.notion.getPage(
             this?.eventLink?.notionPageId || '',
         );
-        this.expect(result.fail, false);
-        this.expect(result.syncEvents.gCal2NotionCount > 0, true);
         this.expect((notionPage as PageObjectResponse).archived, true);
+
+        // 구글 이벤트 검증
+        const gCalEvent = await this.gCalEvent.get();
+        this.expect(gCalEvent?.data?.status, 'cancelled');
     }
 
     async cleanUp() {}

@@ -1,4 +1,3 @@
-import { PageObjectResponse } from '@notionhq/client/build/src/api-endpoints';
 import { EventEntity } from '@opize/calendar2notion-object';
 import dayjs from 'dayjs';
 
@@ -51,9 +50,10 @@ export class G2NMoveCalendarCase extends TestCase {
         const notionPage = await this.ctx.notion.getPage(
             eventLink.notionPageId,
         );
+
         this.expect(notionPage?.id, EXPECTED_RULE.NOT_NULL);
         const calendarProp = getProp(
-            notionPage as PageObjectResponse,
+            notionPage,
             this.ctx.user.parsedNotionProps.calendar,
             'select',
         );

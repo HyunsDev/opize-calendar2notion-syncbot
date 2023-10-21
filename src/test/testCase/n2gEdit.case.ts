@@ -4,7 +4,7 @@ import { WorkerResult } from '@/module/worker/types/result';
 
 import { TestEventData } from '../class/TestEventData';
 import { TestNotionPage } from '../class/TestNotionPage';
-import { getProp } from '../test.notion.service';
+import { getProp, richText } from '../test.notion.service';
 
 import { EXPECTED_RULE, TestCase } from './Case';
 
@@ -77,24 +77,13 @@ export class N2GEditCase extends TestCase {
         const page = await this.page.get();
         const props = this.ctx.user.parsedNotionProps;
 
+        this.expect(richText(getProp(page, props.title, 'title')), PAGE2.title);
         this.expect(
-            getProp(page, props.title, 'title')
-                .title.map((t) => t.plain_text)
-                .join(''),
-            PAGE2.title,
-        );
-
-        this.expect(
-            getProp(page, props.description, 'rich_text')
-                .rich_text.map((t) => t.plain_text)
-                .join(''),
+            richText(getProp(page, props.description, 'rich_text')),
             PAGE2.description,
         );
-
         this.expect(
-            getProp(page, props.location, 'rich_text')
-                .rich_text.map((t) => t.plain_text)
-                .join(''),
+            richText(getProp(page, props.location, 'rich_text')),
             PAGE2.location,
         );
     }
