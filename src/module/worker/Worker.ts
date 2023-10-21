@@ -1,3 +1,4 @@
+import dayjs from 'dayjs';
 import { Not } from 'typeorm';
 
 import { DB } from '@/database';
@@ -122,9 +123,6 @@ export class Worker {
         });
     }
 
-    /**
-     *
-     */
     private async startSync() {
         this.debugLog('STEP: startSync');
         this.context.result.step = 'startSync';
@@ -178,11 +176,37 @@ export class Worker {
             await this.googleCalendarAssist.getUpdatedEvents();
         this.debugLog(`updatedGCalEvents: ${updatedGCalEvents.length}개`);
 
-        for (const event of updatedGCalEvents) {
+        const pages = updatedPages.filter((page) => {
+            if (!page.eventLink) return true;
+            const event = updatedGCalEvents.find(
+                (e) =>
+                    page?.eventLink?.googleCalendarEventId ===
+                    e.googleCalendarEventId,
+            );
+            if (!event) return true;
+            return (
+                dayjs(event.updatedAt).second(0) >
+                dayjs(page.updatedAt).second(0)
+            );
+        });
+
+        const events = updatedGCalEvents.filter((event) => {
+            if (!event.eventLink) return true;
+            const page = updatedPages.find(
+                (e) => event?.eventLink?.notionPageId === e.notionPageId,
+            );
+            if (!page) return true;
+            return (
+                dayjs(page.updatedAt).second(0) >=
+                dayjs(event.updatedAt).second(0)
+            );
+        });
+
+        for (const event of events) {
             await this.notionAssist.CUDPage(event);
         }
 
-        for (const page of updatedPages) {
+        for (const page of pages) {
             await this.googleCalendarAssist.CUDEvent(page);
         }
     }

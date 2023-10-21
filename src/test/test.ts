@@ -56,8 +56,6 @@ class WorkerTest {
             this.cases.push(new Case(this.ctx));
         }
 
-        console.clear();
-
         console.log(chalk.bgWhite.black(` TEST `) + ` ${user.name}`);
         console.log(
             `    ${chalk.gray('User ID'.padEnd(12, ' '))} ${this.ctx.user.id}`,
