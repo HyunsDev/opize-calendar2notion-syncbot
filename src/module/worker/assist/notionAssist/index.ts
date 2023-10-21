@@ -1,3 +1,4 @@
+import { DatabaseObjectResponse } from '@notionhq/client/build/src/api-endpoints';
 import { CalendarEntity } from '@opize/calendar2notion-object';
 
 import { DB } from '@/database';
@@ -6,6 +7,7 @@ import {
     GoogleCalendarEventDto,
     NotionEventDto,
 } from '@/module/event';
+import { getDatabaseProp } from '@/utils/getDatabaseProp';
 
 import { WorkContext } from '../../context/work.context';
 import { SyncErrorCode } from '../../error';
@@ -67,7 +69,7 @@ export class NotionAssist extends Assist {
 
     public async addCalendarProp(calendar: CalendarEntity) {
         // 속성 추가
-        const calendarOptions = this.getCalendarOptions();
+        const calendarOptions = await this.getCalendarOptions();
         calendarOptions.push({
             name: calendar.googleCalendarName,
             id: undefined,
@@ -175,15 +177,20 @@ export class NotionAssist extends Assist {
         );
     }
 
-    private getCalendarOptions(): {
-        id?: string;
-        name: string;
-    }[] {
-        return this.context.calendars
-            .filter((e) => e.notionPropertyId)
-            .map((e) => ({
-                id: e.notionPropertyId,
-                name: e.googleCalendarName,
-            }));
+    private async getCalendarOptions(): Promise<
+        { id?: string; name: string }[]
+    > {
+        const database =
+            (await this.api.getDatabase()) as DatabaseObjectResponse;
+        const props = this.context.user.parsedNotionProps;
+        const calendarProp = getDatabaseProp(
+            database,
+            props.calendar,
+            'select',
+        );
+        return Object.values(calendarProp.select.options).map((e) => ({
+            id: e.id,
+            name: e.name,
+        }));
     }
 }

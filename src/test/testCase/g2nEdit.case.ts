@@ -3,10 +3,11 @@ import dayjs from 'dayjs';
 
 import { NotionEventDto } from '@/module/event';
 import { WorkerResult } from '@/module/worker/types/result';
+import { getProp } from '@/utils/getProp';
 
 import { TestEventData } from '../class/TestEventData';
 import { TestGCalEvent } from '../class/TestGCalEvent';
-import { getProp, richText } from '../test.notion.service';
+import { richText } from '../test.notion.service';
 
 import { EXPECTED_RULE, TestCase } from './Case';
 
@@ -19,7 +20,7 @@ const EVENT1: TestEventData = {
             date: NOW.format('YYYY-MM-DD'),
         },
         end: {
-            date: NOW.format('YYYY-MM-DD'),
+            date: NOW.add(1, 'day').format('YYYY-MM-DD'),
         },
     },
     location: 'TEST LOCATION',
