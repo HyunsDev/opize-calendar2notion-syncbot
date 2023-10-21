@@ -1,5 +1,6 @@
 import dayjs from 'dayjs';
 
+import { GoogleCalendarEventDto } from '@/module/event';
 import { WorkerResult } from '@/module/worker/types/result';
 
 import { TestEventData } from '../class/TestEventData';
@@ -28,10 +29,10 @@ const PAGE2: TestEventData = {
     title: 'N2G 이벤트 수정 테스트 (수정됨)',
     date: {
         start: {
-            dateTime: NOW.hour(12).toISOString(),
+            dateTime: NOW.hour(12).second(0).millisecond(0).toISOString(),
         },
         end: {
-            dateTime: NOW.hour(13).toISOString(),
+            dateTime: NOW.hour(13).second(0).millisecond(0).toISOString(),
         },
     },
     location: 'EDITED TEST LOCATION',
@@ -72,6 +73,15 @@ export class N2GEditCase extends TestCase {
         this.expect(gcalEvent?.data.start?.dateTime, EXPECTED_RULE.NOT_NULL);
         this.expect(gcalEvent?.data?.description, PAGE2.description);
         this.expect(gcalEvent?.data?.location, PAGE2.location);
+        const date2 = GoogleCalendarEventDto.convertDateFromEvent(PAGE2?.date);
+        this.expect(
+            dayjs(gcalEvent?.data?.start?.dateTime).toISOString(),
+            dayjs(date2.start.dateTime).toISOString(),
+        );
+        this.expect(
+            dayjs(gcalEvent?.data?.end?.dateTime).toISOString(),
+            dayjs(date2.end.dateTime).toISOString(),
+        );
 
         // Notion
         const page = await this.page.get();

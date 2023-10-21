@@ -1,6 +1,7 @@
 import { PageObjectResponse } from '@notionhq/client/build/src/api-endpoints';
 import dayjs from 'dayjs';
 
+import { NotionEventDto } from '@/module/event';
 import { WorkerResult } from '@/module/worker/types/result';
 
 import { TestEventData } from '../class/TestEventData';
@@ -29,10 +30,10 @@ const EVENT2: TestEventData = {
     title: 'G2N 이벤트 수정 테스트 (수정됨)',
     date: {
         start: {
-            dateTime: NOW.hour(12).toISOString(),
+            dateTime: NOW.hour(12).second(0).millisecond(0).toISOString(),
         },
         end: {
-            dateTime: NOW.hour(13).toISOString(),
+            dateTime: NOW.hour(13).second(0).millisecond(0).toISOString(),
         },
     },
     location: 'EDITED TEST LOCATION',
@@ -69,15 +70,23 @@ export class G2NEditCase extends TestCase {
             richText(getProp(notionPage, props.title, 'title')),
             'G2N 이벤트 수정 테스트 (수정됨)',
         );
-
         this.expect(
             richText(getProp(notionPage, props.description, 'rich_text')),
             'EDITED TEST DESCRIPTION',
         );
-
         this.expect(
             richText(getProp(notionPage, props.location, 'rich_text')),
             'EDITED TEST LOCATION',
+        );
+        const date = getProp(notionPage, props.date, 'date');
+        const date2 = NotionEventDto.convertDateFromEvent(EVENT2.date);
+        this.expect(
+            dayjs(date?.date.start).toISOString(),
+            dayjs(date2.start).toISOString(),
+        );
+        this.expect(
+            dayjs(date?.date.end).toISOString(),
+            dayjs(date2.end).toISOString(),
         );
 
         // google calendar
