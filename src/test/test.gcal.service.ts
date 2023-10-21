@@ -1,7 +1,8 @@
 import { CalendarEntity, UserEntity } from '@opize/calendar2notion-object';
-import dayjs from 'dayjs';
 import { calendar_v3, google } from 'googleapis';
 import { GaxiosError } from 'googleapis-common';
+
+import { GoogleCalendarDateTime } from '@/module/event';
 
 import { TestContext } from './test.context';
 
@@ -48,39 +49,44 @@ export class TestGCalService {
         });
     }
 
-    async createTestGoogleCalendarEvent(title: string) {
-        const date = dayjs().format('YYYY-MM-DD');
+    async create(data: {
+        calendarId: string;
+
+        title: string;
+        date: GoogleCalendarDateTime;
+        location: string;
+        description: string;
+    }) {
         return await this.googleCalendarClient.events.insert({
-            calendarId: this.ctx.calendar.googleCalendarId,
+            calendarId: data.calendarId,
             requestBody: {
-                summary: title,
-                location: 'TEST LOCATION',
-                description: 'TEST DESCRIPTION',
-                start: {
-                    date,
-                },
-                end: {
-                    date,
-                },
+                summary: data.title,
+                location: data.location,
+                description: data.description,
+                start: data.date.start,
+                end: data.date.end,
             },
         });
     }
 
-    async editTestGoogleCalendarEvent(eventId: string, title: string) {
-        const date = dayjs().format('YYYY-MM-DD');
-        return await this.googleCalendarClient.events.patch({
-            calendarId: this.ctx.calendar.googleCalendarId,
-            eventId: eventId,
+    async update(data: {
+        eventId: string;
+        calendarId: string;
+
+        title: string;
+        date: GoogleCalendarDateTime;
+        location: string;
+        description: string;
+    }) {
+        return await this.googleCalendarClient.events.update({
+            calendarId: data.calendarId,
+            eventId: data.eventId,
             requestBody: {
-                summary: title,
-                location: 'EDITED TEST LOCATION',
-                description: 'EDITED TEST DESCRIPTION',
-                start: {
-                    date,
-                },
-                end: {
-                    date,
-                },
+                summary: data.title,
+                location: data.location,
+                description: data.description,
+                start: data.date.start,
+                end: data.date.end,
             },
         });
     }
@@ -107,10 +113,10 @@ export class TestGCalService {
         }
     }
 
-    async deleteEvent(eventId: string) {
+    async deleteEvent(eventId: string, calendar: CalendarEntity) {
         try {
             return await this.googleCalendarClient.events.delete({
-                calendarId: this.ctx.calendar.googleCalendarId,
+                calendarId: calendar.googleCalendarId,
                 eventId: eventId,
             });
         } catch (err) {

@@ -1,37 +1,61 @@
 import { PageObjectResponse } from '@notionhq/client/build/src/api-endpoints';
-import { calendar_v3 } from 'googleapis';
+import dayjs from 'dayjs';
 
 import { WorkerResult } from '@/module/worker/types/result';
 
+import { TestEventData } from '../class/TestEventData';
+import { TestGCalEvent } from '../class/TestGCalEvent';
 import { getProp } from '../test.notion.service';
 
 import { EXPECTED_RULE, TestCase } from './Case';
 
+const NOW = dayjs();
+
+const EVENT1: TestEventData = {
+    title: 'G2N 이벤트 수정 테스트',
+    date: {
+        start: {
+            date: NOW.format('YYYY-MM-DD'),
+        },
+        end: {
+            date: NOW.format('YYYY-MM-DD'),
+        },
+    },
+    location: 'TEST LOCATION',
+    description: 'TEST DESCRIPTION',
+};
+
+const EVENT2: TestEventData = {
+    title: 'G2N 이벤트 수정 테스트 (수정됨)',
+    date: {
+        start: {
+            dateTime: NOW.hour(12).toISOString(),
+        },
+        end: {
+            dateTime: NOW.hour(13).toISOString(),
+        },
+    },
+    location: 'EDITED TEST LOCATION',
+    description: 'EDITED TEST DESCRIPTION',
+};
+
 export class G2NEditCase extends TestCase {
     name = 'G2NEditCase';
-    private gCalEvent: calendar_v3.Schema$Event;
+    private gCalEvent: TestGCalEvent;
 
     async init() {
-        const title = 'G2N 이벤트 수정 테스트';
-        this.gCalEvent = (
-            await this.ctx.gcal.createTestGoogleCalendarEvent(title)
-        ).data;
+        this.gCalEvent = new TestGCalEvent(this.ctx);
+        await this.gCalEvent.create(EVENT1);
     }
 
     async work() {
-        const title = 'G2N 이벤트 수정 테스트 (수정됨)';
-        await this.ctx.gcal.editTestGoogleCalendarEvent(
-            this.gCalEvent.id,
-            title,
-        );
+        await this.gCalEvent.update(EVENT2);
     }
 
     async validate(result: WorkerResult) {
         const props = this.ctx.user.parsedNotionProps;
 
-        const eventLink = await this.ctx.service.getEventLinkFromGoogleEventId(
-            this.gCalEvent.id,
-        );
+        const eventLink = await this.gCalEvent.getEventLink();
         const notionPage = await this.ctx.notion.getPage(
             eventLink.notionPageId,
         );
@@ -71,10 +95,7 @@ export class G2NEditCase extends TestCase {
         );
 
         // google calendar
-        const gCalEvent = await this.ctx.gcal.getEvent(
-            eventLink.googleCalendarEventId,
-            this.ctx.calendar,
-        );
+        const gCalEvent = await this.gCalEvent.get();
 
         this.expect(gCalEvent?.data, EXPECTED_RULE.NOT_NULL);
         this.expect(
@@ -86,6 +107,6 @@ export class G2NEditCase extends TestCase {
     }
 
     async cleanUp() {
-        await this.ctx.gcal.deleteEvent(this.gCalEvent.id);
+        await this.gCalEvent.delete();
     }
 }

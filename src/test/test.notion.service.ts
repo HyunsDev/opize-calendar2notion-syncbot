@@ -1,6 +1,6 @@
 import { APIResponseError, Client } from '@notionhq/client';
 import { PageObjectResponse } from '@notionhq/client/build/src/api-endpoints';
-import dayjs from 'dayjs';
+import { CalendarEntity } from '@opize/calendar2notion-object';
 
 import { NotionDateTime } from '@/module/event';
 
@@ -44,12 +44,14 @@ export class TestNotionService {
         });
     }
 
-    async createTestNotionPage(title: string) {
+    async createPage(data: {
+        title: string;
+        calendarName: string;
+        date: NotionDateTime;
+        location: string;
+        description: string;
+    }) {
         const props = this.ctx.user.parsedNotionProps;
-        const date: NotionDateTime = {
-            start: dayjs().format('YYYY-MM-DD'),
-        };
-
         return await this.notionClient.pages.create({
             parent: {
                 database_id: this.ctx.user.notionDatabaseId,
@@ -61,7 +63,7 @@ export class TestNotionService {
                         {
                             type: 'text',
                             text: {
-                                content: title,
+                                content: data.title,
                             },
                         },
                     ],
@@ -69,12 +71,12 @@ export class TestNotionService {
                 [props.calendar]: {
                     type: 'select',
                     select: {
-                        name: this.ctx.calendar.googleCalendarName,
+                        name: data.calendarName,
                     },
                 },
                 [props.date]: {
                     type: 'date',
-                    date: date,
+                    date: data.date,
                 },
                 [props.location]: {
                     type: 'rich_text',
@@ -82,7 +84,7 @@ export class TestNotionService {
                         {
                             type: 'text',
                             text: {
-                                content: 'TEST LOCATION',
+                                content: data.location,
                             },
                         },
                     ],
@@ -93,7 +95,7 @@ export class TestNotionService {
                         {
                             type: 'text',
                             text: {
-                                content: 'TEST DESCRIPTION',
+                                content: data.description,
                             },
                         },
                     ],
@@ -102,12 +104,17 @@ export class TestNotionService {
         });
     }
 
-    async updateTestNotionPage(pageId: string, title: string) {
+    async updatePage(
+        pageId: string,
+        data: {
+            title: string;
+            calendarName: string;
+            date: NotionDateTime;
+            location: string;
+            description: string;
+        },
+    ) {
         const props = this.ctx.user.parsedNotionProps;
-        const date: NotionDateTime = {
-            start: dayjs().add(1, 'day').format('YYYY-MM-DD'),
-        };
-
         return await this.notionClient.pages.update({
             page_id: pageId,
             properties: {
@@ -117,14 +124,14 @@ export class TestNotionService {
                         {
                             type: 'text',
                             text: {
-                                content: title,
+                                content: data.title,
                             },
                         },
                     ],
                 },
                 [props.date]: {
                     type: 'date',
-                    date: date,
+                    date: data.date,
                 },
                 [props.location]: {
                     type: 'rich_text',
@@ -132,7 +139,7 @@ export class TestNotionService {
                         {
                             type: 'text',
                             text: {
-                                content: 'EDITED TEST LOCATION',
+                                content: data.location,
                             },
                         },
                     ],
@@ -143,7 +150,7 @@ export class TestNotionService {
                         {
                             type: 'text',
                             text: {
-                                content: 'EDITED TEST DESCRIPTION',
+                                content: data.description,
                             },
                         },
                     ],
@@ -152,7 +159,7 @@ export class TestNotionService {
         });
     }
 
-    async moveCalendar(pageId: string) {
+    async moveCalendar(pageId: string, calendar: CalendarEntity) {
         const props = this.ctx.user.parsedNotionProps;
         return await this.notionClient.pages.update({
             page_id: pageId,
@@ -160,7 +167,7 @@ export class TestNotionService {
                 [props.calendar]: {
                     type: 'select',
                     select: {
-                        name: this.ctx.calendar2.googleCalendarName,
+                        name: calendar.googleCalendarName,
                     },
                 },
             },

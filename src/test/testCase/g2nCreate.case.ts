@@ -1,26 +1,41 @@
-import { calendar_v3 } from 'googleapis';
+import dayjs from 'dayjs';
 
 import { WorkerResult } from '@/module/worker/types/result';
 
+import { TestEventData } from '../class/TestEventData';
+import { TestGCalEvent } from '../class/TestGCalEvent';
+
 import { EXPECTED_RULE, TestCase } from './Case';
+
+const NOW = dayjs();
+const EVENT1: TestEventData = {
+    title: 'G2N 이벤트 생성 테스트',
+    date: {
+        start: {
+            date: NOW.format('YYYY-MM-DD'),
+        },
+        end: {
+            date: NOW.format('YYYY-MM-DD'),
+        },
+    },
+    location: 'TEST LOCATION',
+    description: 'TEST DESCRIPTION',
+};
 
 export class G2NCreateCase extends TestCase {
     name = 'G2NCreateCase';
-    private gCalEvent: calendar_v3.Schema$Event;
+
+    private gCalEvent: TestGCalEvent;
 
     async init() {}
 
     async work() {
-        const title = 'G2N 이벤트 생성 테스트';
-        this.gCalEvent = (
-            await this.ctx.gcal.createTestGoogleCalendarEvent(title)
-        ).data;
+        this.gCalEvent = new TestGCalEvent(this.ctx);
+        await this.gCalEvent.create(EVENT1);
     }
 
     async validate(result: WorkerResult) {
-        const eventLink = await this.ctx.service.getEventLinkFromGoogleEventId(
-            this.gCalEvent.id,
-        );
+        const eventLink = await this.gCalEvent.getEventLink();
         this.expect(eventLink, EXPECTED_RULE.NOT_NULL);
         if (!eventLink) return;
 
@@ -34,6 +49,6 @@ export class G2NCreateCase extends TestCase {
     }
 
     async cleanUp() {
-        await this.ctx.gcal.deleteEvent(this.gCalEvent.id);
+        await this.gCalEvent.delete();
     }
 }

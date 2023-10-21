@@ -1,33 +1,43 @@
-import {
-    CreatePageResponse,
-    PageObjectResponse,
-} from '@notionhq/client/build/src/api-endpoints';
+import dayjs from 'dayjs';
 
 import { WorkerResult } from '@/module/worker/types/result';
 
+import { TestEventData } from '../class/TestEventData';
+import { TestNotionPage } from '../class/TestNotionPage';
 import { getProp } from '../test.notion.service';
 
 import { TestCase } from './Case';
 
+const NOW = dayjs();
+const PAGE1: TestEventData = {
+    title: 'N2G 이벤트 캘린더 이동 테스트',
+    date: {
+        start: {
+            date: NOW.format('YYYY-MM-DD'),
+        },
+        end: {
+            date: NOW.format('YYYY-MM-DD'),
+        },
+    },
+    location: 'TEST LOCATION',
+    description: 'TEST DESCRIPTION',
+};
+
 export class N2GMoveCalendarCase extends TestCase {
     name = 'N2GMoveCalendarCase';
-    private notionPage: CreatePageResponse;
+    page: TestNotionPage;
 
     async init() {
-        const title = 'N2G 캘린더 이동 테스트';
-        this.notionPage = await this.ctx.notion.createTestNotionPage(title);
+        this.page = new TestNotionPage(this.ctx);
+        await this.page.create(PAGE1);
     }
 
     async work() {
-        this.notionPage = await this.ctx.notion.moveCalendar(
-            this.notionPage.id,
-        );
+        await this.page.moveCalendar();
     }
 
     async validate(result: WorkerResult) {
-        const eventLink = await this.ctx.service.getEventLinkFromNotionPageId(
-            this.notionPage.id,
-        );
+        const eventLink = await this.page.getEventLink();
 
         // 작업 결과
         this.expect(result.fail, false);
@@ -47,19 +57,37 @@ export class N2GMoveCalendarCase extends TestCase {
         this.expect(newGCalEvent?.data.status, 'confirmed');
 
         // 노션 페이지 검증
-        const notionPage = await this.ctx.notion.getPage(this.notionPage.id);
-        const calendarProp = getProp(
-            notionPage as PageObjectResponse,
-            this.ctx.user.parsedNotionProps.calendar,
-            'select',
-        );
+        const notionPage = await this.page.get();
+        const props = this.ctx.user.parsedNotionProps;
+
+        const calendarProp = getProp(notionPage, props.calendar, 'select');
         this.expect(
             calendarProp?.select?.name,
             this.ctx.calendar2.googleCalendarName,
         );
+        this.expect(
+            getProp(notionPage, props.title, 'title')
+                .title.map((t) => t.plain_text)
+                .join(''),
+            PAGE1.title,
+        );
+
+        this.expect(
+            getProp(notionPage, props.description, 'rich_text')
+                .rich_text.map((t) => t.plain_text)
+                .join(''),
+            PAGE1.description,
+        );
+
+        this.expect(
+            getProp(notionPage, props.location, 'rich_text')
+                .rich_text.map((t) => t.plain_text)
+                .join(''),
+            PAGE1.location,
+        );
     }
 
     async cleanUp() {
-        await this.ctx.notion.deletePage(this.notionPage.id);
+        await this.page.delete();
     }
 }
