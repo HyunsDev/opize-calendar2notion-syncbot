@@ -1,6 +1,11 @@
 import { CalendarEntity } from '@opize/calendar2notion-object';
+import dayjs from 'dayjs';
 
-import { GoogleCalendarEventDto, NotionEventDto } from '@/module/event';
+import {
+    EventDto,
+    GoogleCalendarEventDto,
+    NotionEventDto,
+} from '@/module/event';
 
 import { WorkContext } from '../../context/work.context';
 import { Assist } from '../../types/assist';
@@ -57,52 +62,77 @@ export class GoogleCalendarAssist extends Assist {
             events.push(...res);
         }
 
+        const eventsWithEventLink = (
+            await Promise.all(
+                events.map(async (event) => {
+                    event.eventLink =
+                        await this.eventLinkAssist.findByGCalEvent(
+                            event.googleCalendarEventId,
+                        );
+                    return event;
+                }),
+            )
+        ).filter(
+            (event) =>
+                !event.eventLink ||
+                dayjs(event.updatedAt) >
+                    dayjs(event.eventLink.lastGoogleCalendarUpdate),
+        );
+
         this.context.result.syncEvents.gCalCalendarCount =
             this.context.connectedCalendars.length;
         this.context.result.syncEvents.gCal2NotionCount = events.length;
 
-        return events;
+        return eventsWithEventLink;
     }
 
-    public async updateEvent(notionEvent: NotionEventDto) {
+    public async updateEventAfterNotionPageCreate(notionEvent: NotionEventDto) {
         const event = notionEvent.toEvent();
-        if (!event.calendar || event.calendar.accessRole === 'reader') return;
+        if (!event.calendar || event.isReadOnly()) return;
 
-        return await this.api.updateEvent(
-            GoogleCalendarEventDto.fromEvent(event),
-        );
+        await this._updateEvent(event);
     }
 
     public async CUDEvent(notionEvent: NotionEventDto) {
         const event = notionEvent.toEvent();
+        if (!event.calendar || event.isReadOnly()) return;
+        if (event.isNewEvent()) {
+            await this._createEvent(event);
+        } else {
+            await this._updateEvent(event);
+        }
+    }
 
-        let eventLink = await this.eventLinkAssist.findByNotionPageId(
-            event.notionPageId,
-        );
+    private async _updateEvent(event: EventDto) {
+        event.eventId = event.eventLink.id;
+        event.googleCalendarEventId = event.eventLink.googleCalendarEventId;
 
-        // 캘린더가 없거나 읽기 전용일 경우 무시
-        if (!event.calendar || event.calendar.accessRole === 'reader') return;
-
-        if (eventLink && eventLink.googleCalendarEventId) {
-            event.eventId = eventLink.id;
-            event.googleCalendarEventId = eventLink.googleCalendarEventId;
-
-            await this.api.updateEvent(GoogleCalendarEventDto.fromEvent(event));
-            await this.eventLinkAssist.updateLastGCalUpdate(eventLink);
-            return;
+        if (event.isDifferentCalendarId()) {
+            await this.api.moveEventCalendar(
+                GoogleCalendarEventDto.fromEvent(event),
+                event.eventLink.calendar,
+            );
+            await this.eventLinkAssist.updateCalendar(
+                event.eventLink,
+                event.calendar,
+            );
         }
 
+        await this.api.updateEvent(GoogleCalendarEventDto.fromEvent(event));
+        await this.eventLinkAssist.updateLastGCalUpdate(event.eventLink);
+    }
+
+    private async _createEvent(event: EventDto) {
         const newEvent = await this.api.createEvent(
             GoogleCalendarEventDto.fromEvent(event),
         );
-        eventLink = await this.eventLinkAssist.create(
+        const eventLink = await this.eventLinkAssist.create(
             event.merge(newEvent.toEvent()),
         );
 
-        newEvent.notionPageId = eventLink.notionPageId;
-        newEvent.calendar.googleCalendarId = eventLink.googleCalendarCalendarId;
-        await this.notionAssist.updatePage(newEvent);
+        if (event.isReadOnly()) return;
 
-        return;
+        newEvent.eventLink = eventLink;
+        await this.notionAssist.updatePageAfterCreateGCalEvent(newEvent);
     }
 }

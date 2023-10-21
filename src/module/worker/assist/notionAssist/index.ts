@@ -1,7 +1,11 @@
 import { CalendarEntity } from '@opize/calendar2notion-object';
 
 import { DB } from '@/database';
-import { GoogleCalendarEventDto, NotionEventDto } from '@/module/event';
+import {
+    EventDto,
+    GoogleCalendarEventDto,
+    NotionEventDto,
+} from '@/module/event';
 
 import { WorkContext } from '../../context/work.context';
 import { SyncErrorCode } from '../../error';
@@ -98,8 +102,18 @@ export class NotionAssist extends Assist {
 
     public async getUpdatedPages() {
         const updatedPages = await this.api.getUpdatedPages();
+
+        const updatedPagesWithEventLink = await Promise.all(
+            updatedPages.map(async (page) => {
+                page.eventLink = await this.eventLinkAssist.findByNotionPageId(
+                    page.notionPageId,
+                );
+                return page;
+            }),
+        );
+
         this.context.result.syncEvents.notion2GCalCount = updatedPages.length;
-        return updatedPages;
+        return updatedPagesWithEventLink;
     }
 
     public async getPages() {
@@ -107,58 +121,58 @@ export class NotionAssist extends Assist {
         return pages;
     }
 
-    public async updatePage(googleCalendarEvent: GoogleCalendarEventDto) {
-        const page = await this.api.updatePage(
-            NotionEventDto.fromEvent(googleCalendarEvent.toEvent()),
-        );
-        return page;
+    public async updatePageAfterCreateGCalEvent(
+        googleCalendarEvent: GoogleCalendarEventDto,
+    ) {
+        const event = googleCalendarEvent.toEvent();
+        await this._updatePage(event);
     }
 
     public async CUDPage(googleCalendarEvent: GoogleCalendarEventDto) {
         const event = googleCalendarEvent.toEvent();
+        if (event.isNewEvent()) {
+            await this._createPage(event);
+        } else {
+            await this._updatePage(event);
+        }
+    }
 
-        let eventLink = await this.eventLinkAssist.findByGCalEvent(
-            event.googleCalendarEventId,
-            event.calendar.googleCalendarId,
+    private async _updatePage(event: EventDto) {
+        event.googleCalendarEventId = event.eventLink.googleCalendarEventId;
+        event.notionPageId = event.eventLink.notionPageId;
+
+        if (event.isDeletedEvent()) {
+            await this.deletePage(event.notionPageId);
+            return;
+        }
+
+        if (event.isDifferentCalendarId()) {
+            await this.eventLinkAssist.updateCalendar(
+                event.eventLink,
+                event.calendar,
+            );
+        }
+
+        await this.api.updatePage(NotionEventDto.fromEvent(event));
+        await this.eventLinkAssist.updateLastNotionUpdate(event.eventLink);
+    }
+
+    private async _createPage(event: EventDto) {
+        if (event.isDeletedEvent()) return;
+
+        const newEvent = await this.api.createPage(
+            NotionEventDto.fromEvent(event),
+        );
+        const eventLink = await this.eventLinkAssist.create(
+            event.merge(newEvent.toEvent()),
         );
 
-        if (eventLink && eventLink.notionPageId) {
-            event.googleCalendarEventId = eventLink.googleCalendarEventId;
-            event.notionPageId = eventLink.notionPageId;
+        if (event.isReadOnly()) return;
 
-            if (event.status === 'cancelled') {
-                await this.deletePage(event.notionPageId);
-                return;
-            }
-
-            if (
-                eventLink.googleCalendarCalendarId !==
-                event.calendar.googleCalendarId
-            ) {
-                await this.eventLinkAssist.updateCalendar(
-                    eventLink,
-                    event.calendar,
-                );
-            }
-
-            await this.api.updatePage(NotionEventDto.fromEvent(event));
-        } else {
-            if (event.status === 'cancelled') return;
-
-            const newEvent = await this.api.createPage(
-                NotionEventDto.fromEvent(event),
-            );
-            eventLink = await this.eventLinkAssist.create(
-                event.merge(newEvent.toEvent()),
-            );
-
-            newEvent.googleCalendarEventId = eventLink.googleCalendarEventId;
-            newEvent.calendar.googleCalendarId =
-                eventLink.googleCalendarCalendarId;
-
-            if (newEvent.calendar.accessRole === 'reader') return;
-            await this.googleCalendarAssist.updateEvent(newEvent);
-        }
+        newEvent.eventLink = eventLink;
+        await this.googleCalendarAssist.updateEventAfterNotionPageCreate(
+            newEvent,
+        );
     }
 
     private getCalendarOptions(): {

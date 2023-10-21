@@ -1,7 +1,8 @@
-import { UserEntity } from '@opize/calendar2notion-object';
-import dayjs from 'dayjs';
+import { CalendarEntity, UserEntity } from '@opize/calendar2notion-object';
 import { calendar_v3, google } from 'googleapis';
 import { GaxiosError } from 'googleapis-common';
+
+import { GoogleCalendarDateTime } from '@/module/event';
 
 import { TestContext } from './test.context';
 
@@ -48,47 +49,60 @@ export class TestGCalService {
         });
     }
 
-    async createTestGoogleCalendarEvent(title: string) {
-        const date = dayjs().format('YYYY-MM-DD');
+    async create(data: {
+        calendarId: string;
+
+        title: string;
+        date: GoogleCalendarDateTime;
+        location: string;
+        description: string;
+    }) {
         return await this.googleCalendarClient.events.insert({
-            calendarId: this.ctx.calendar.googleCalendarId,
+            calendarId: data.calendarId,
             requestBody: {
-                summary: title,
-                location: 'TEST LOCATION',
-                description: 'TEST DESCRIPTION',
-                start: {
-                    date,
-                },
-                end: {
-                    date,
-                },
+                summary: data.title,
+                location: data.location,
+                description: data.description,
+                start: data.date.start,
+                end: data.date.end,
             },
         });
     }
 
-    async editTestGoogleCalendarEvent(eventId: string, title: string) {
-        const date = dayjs().format('YYYY-MM-DD');
-        return await this.googleCalendarClient.events.patch({
+    async update(data: {
+        eventId: string;
+        calendarId: string;
+
+        title: string;
+        date: GoogleCalendarDateTime;
+        location: string;
+        description: string;
+    }) {
+        return await this.googleCalendarClient.events.update({
+            calendarId: data.calendarId,
+            eventId: data.eventId,
+            requestBody: {
+                summary: data.title,
+                location: data.location,
+                description: data.description,
+                start: data.date.start,
+                end: data.date.end,
+            },
+        });
+    }
+
+    async moveTestGoogleCalendarEvent(eventId: string) {
+        return await this.googleCalendarClient.events.move({
             calendarId: this.ctx.calendar.googleCalendarId,
             eventId: eventId,
-            requestBody: {
-                summary: title,
-                location: 'EDITED TEST LOCATION',
-                description: 'EDITED TEST DESCRIPTION',
-                start: {
-                    date,
-                },
-                end: {
-                    date,
-                },
-            },
+            destination: this.ctx.calendar2.googleCalendarId,
         });
     }
 
-    async getEvent(eventId: string) {
+    async getEvent(eventId: string, calendar: CalendarEntity) {
         try {
             const event = await this.googleCalendarClient.events.get({
-                calendarId: this.ctx.calendar.googleCalendarId,
+                calendarId: calendar.googleCalendarId,
                 eventId: eventId,
             });
             return event;
@@ -99,10 +113,16 @@ export class TestGCalService {
         }
     }
 
-    async deleteEvent(eventId: string) {
-        return await this.googleCalendarClient.events.delete({
-            calendarId: this.ctx.calendar.googleCalendarId,
-            eventId: eventId,
-        });
+    async deleteEvent(eventId: string, calendar: CalendarEntity) {
+        try {
+            return await this.googleCalendarClient.events.delete({
+                calendarId: calendar.googleCalendarId,
+                eventId: eventId,
+            });
+        } catch (err) {
+            if (err instanceof GaxiosError && err.response.status === 410) {
+                return null;
+            } else throw err;
+        }
     }
 }

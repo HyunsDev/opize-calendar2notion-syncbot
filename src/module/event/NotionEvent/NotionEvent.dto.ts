@@ -67,6 +67,8 @@ export class NotionEventDto extends ProtoEvent {
             googleCalendarEventId: event.googleCalendarEventId,
             calendar: event.calendar,
             notionPageId: event.notionPageId,
+            updatedAt: event.updatedAt,
+            eventLink: event.eventLink,
 
             title: event.title,
             isDeleted: event.status === 'cancelled',
@@ -95,6 +97,7 @@ export class NotionEventDto extends ProtoEvent {
             notionPageId: originalEvent.id,
             googleCalendarEventId: undefined,
             calendar,
+            updatedAt: new Date(originalEvent.last_edited_time),
 
             title: getProp(originalEvent, props.title, 'title').title.reduce(
                 (pre, cur) => pre + cur.plain_text,
@@ -135,6 +138,8 @@ export class NotionEventDto extends ProtoEvent {
             googleCalendarEventId: this.googleCalendarEventId,
             notionPageId: this.notionPageId,
             calendar: this.calendar,
+            updatedAt: this.updatedAt,
+            eventLink: this.eventLink,
 
             title: this.title,
             status: this.isDeleted ? 'cancelled' : 'confirmed',
@@ -189,45 +194,27 @@ export class NotionEventDto extends ProtoEvent {
         return date;
     }
 
-    static convertDateFromEvent(eventDate: EventDateTime) {
-        const date = {
-            start:
-                'date' in eventDate.start
-                    ? eventDate.start.date
-                    : dayjs(eventDate.start.dateTime).utc().toISOString(),
-            end: '',
-        };
-        // const hasTime = 'dateTime' in eventDate.start;
+    static convertDateFromEvent(eventDate: EventDateTime): NotionDateTime {
+        const isAllDay = 'date' in eventDate.start;
+        const isOneDay =
+            isAllDay && eventDate.start.date === eventDate.end.date;
 
-        const start =
-            'date' in eventDate.start
-                ? eventDate.start.date
-                : eventDate.start.dateTime;
+        const start = isAllDay
+            ? dayjs(eventDate.start.date).utc().format('YYYY-MM-DD')
+            : dayjs(eventDate.start.dateTime).utc().toISOString();
 
-        if ('date' in eventDate.start && 'date' in eventDate.end) {
-            date.end =
-                eventDate.end.date === eventDate.start.date
-                    ? eventDate.end.date
-                    : dayjs(eventDate.end.date).format('YYYY-MM-DD');
-        } else if (
-            'dateTime' in eventDate.start &&
-            'dateTime' in eventDate.end
-        ) {
-            date.end = dayjs(eventDate.end.dateTime).utc().toISOString();
-        } else {
-            throw new Error('Invalid date');
-        }
+        const end = isAllDay
+            ? dayjs(eventDate.end.date).utc().format('YYYY-MM-DD')
+            : dayjs(eventDate.end.dateTime).utc().toISOString();
 
-        if (start != date.end) {
+        if (isOneDay) {
             return {
-                start: date.start,
-                end: date.end,
-                // time_zone: hasTime ? 'Asia/Seoul' : null,
+                start,
             };
         } else {
             return {
-                start: date.start,
-                // time_zone: hasTime ? 'Asia/Seoul' : null,
+                start,
+                end,
             };
         }
     }

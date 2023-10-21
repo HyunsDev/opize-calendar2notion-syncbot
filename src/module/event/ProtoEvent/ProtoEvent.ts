@@ -9,6 +9,7 @@ export interface ProtoEventConstructorProps {
     googleCalendarEventId?: string;
     notionPageId?: string;
     calendar: CalendarEntity;
+    updatedAt: Date;
     eventLink?: EventEntity;
 
     originalNotionEvent?: PageObjectResponse;
@@ -22,6 +23,8 @@ export abstract class ProtoEvent {
     googleCalendarEventId?: string;
     notionPageId?: string;
     calendar: CalendarEntity;
+    updatedAt: Date;
+    eventLink: EventEntity;
 
     readonly originalNotionEvent?: PageObjectResponse;
     readonly originalGoogleCalendarEvent?: calendar_v3.Schema$Event;
@@ -33,6 +36,8 @@ export abstract class ProtoEvent {
         this.googleCalendarEventId = data.googleCalendarEventId;
         this.calendar = data.calendar;
         this.notionPageId = data.notionPageId;
+        this.updatedAt = data.updatedAt;
+        this.eventLink = data.eventLink;
 
         this.originalNotionEvent = data.originalNotionEvent;
         this.originalGoogleCalendarEvent = data.originalGoogleCalendarEvent;

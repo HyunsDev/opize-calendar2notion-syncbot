@@ -12,11 +12,13 @@ import { TestCase } from './testCase/Case';
 import { G2NCreateCase } from './testCase/g2nCreate.case';
 import { G2NDeleteCase } from './testCase/g2nDelete.case';
 import { G2NEditCase } from './testCase/g2nEdit.case';
+import { G2NMoveCalendarCase } from './testCase/g2nMoveCalendar.case';
 import { N2GCreateCase } from './testCase/n2gCreate.case';
 import { N2GDeleteCase } from './testCase/n2gDelete.case';
 import { N2GEditCase } from './testCase/n2gEdit.case';
+import { N2GMoveCalendarCase } from './testCase/n2gMoveCalendar.case';
 import { log } from './utils/log';
-import { getTestCalendar, getTestUser, sleep1m } from './utils/utils';
+import { getTestCalendars, getTestUser, sleep1m } from './utils/utils';
 
 const TEST_CASE = [
     N2GCreateCase,
@@ -25,6 +27,8 @@ const TEST_CASE = [
     G2NEditCase,
     N2GDeleteCase,
     G2NDeleteCase,
+    N2GMoveCalendarCase,
+    G2NMoveCalendarCase,
 ] as const;
 
 class WorkerTest {
@@ -45,11 +49,14 @@ class WorkerTest {
     private async testInit() {
         await AppDataSource.initialize();
         const user = await getTestUser();
-        const calendar = await getTestCalendar();
-        this.ctx = new TestContext(user, calendar);
+        const calendars = await getTestCalendars();
+
+        this.ctx = new TestContext(user, calendars[0], calendars[1]);
         for (const Case of TEST_CASE) {
             this.cases.push(new Case(this.ctx));
         }
+
+        console.clear();
 
         console.log(chalk.bgWhite.black(` TEST `) + ` ${user.name}`);
         console.log(
@@ -61,14 +68,14 @@ class WorkerTest {
             }`,
         );
         console.log(
-            `    ${chalk.gray('Cal ID'.padEnd(12, ' '))} ${
-                this.ctx.calendar.googleCalendarId
-            }`,
+            `    ${chalk.gray('Calendar 1'.padEnd(12, ' '))} ${
+                this.ctx.calendar.googleCalendarName
+            } (${this.ctx.calendar.googleCalendarId})`,
         );
         console.log(
-            `    ${chalk.gray('Cal Name'.padEnd(12, ' '))} ${
-                this.ctx.calendar.googleCalendarName
-            }`,
+            `    ${chalk.gray('Calendar 2'.padEnd(12, ' '))} ${
+                this.ctx.calendar2.googleCalendarName
+            } (${this.ctx.calendar2.googleCalendarId})`,
         );
         console.log(
             `    ${chalk.gray(
@@ -139,11 +146,46 @@ class WorkerTest {
 
     private async runWorker(step: string) {
         await sleep1m();
-        log.run('run', step);
         const worker = new Worker(this.ctx.user.id, 'test');
         const res = await worker.run();
-        log.run('finish', step);
-        console.log('');
+
+        console.log(`    ${chalk.bgBlue(' WORK ')} ${step}`);
+        console.log(
+            `        ${chalk.gray('Success'.padEnd(12, ' '))} ${
+                res.fail ? '❌' : '✅'
+            }`,
+        );
+        console.log(
+            `        ${chalk.gray('Sim Result'.padEnd(12, ' '))} ${
+                res.simpleResponse
+            }`,
+        );
+
+        console.log(
+            `        ${chalk.gray(
+                'Result'.padEnd(12, ' '),
+            )} ${`${res.eraseDeletedEvent.notion}`.padEnd(
+                5,
+                ' ',
+            )} ${`${res.eraseDeletedEvent.eventLink}`.padEnd(
+                5,
+                ' ',
+            )} ${`${res.syncEvents.gCalCalendarCount}`.padEnd(
+                5,
+                ' ',
+            )} ${`${res.syncEvents.gCal2NotionCount}`.padEnd(
+                5,
+                ' ',
+            )} ${`${res.syncEvents.notion2GCalCount}`.padEnd(5, ' ')} ${`${
+                Object.values(res.syncNewCalendar).length
+            }`.padEnd(5, ' ')}`,
+        );
+        console.log(
+            chalk.gray(
+                `                     DelN  DelE  CalN  G2N   N2G   NewC `,
+            ),
+        );
+
         return res;
     }
 }

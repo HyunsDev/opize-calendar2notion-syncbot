@@ -32,7 +32,7 @@ export async function googleCalendarAPIErrorFilter<T>(
                 rule.condition(err.response),
             );
 
-            if (filterRule) {
+            if (filterRule && filterRule.callback) {
                 await filterRule.callback(err, context, args);
             }
         } else {
