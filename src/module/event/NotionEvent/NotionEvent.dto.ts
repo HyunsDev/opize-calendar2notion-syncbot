@@ -163,18 +163,21 @@ export class NotionEventDto extends ProtoEvent {
         const isAllDay = 'date' in eventDate.start;
         const isOneDay =
             isAllDay &&
-            dayjs(eventDate.start.date) ===
-                dayjs(eventDate.end.date).add(-1, 'day');
+            (dayjs(eventDate.start.date) === dayjs(eventDate.end.date) ||
+                dayjs(eventDate.start.date) ===
+                    dayjs(eventDate.end.date).add(-1, 'day'));
 
         const start = isAllDay
             ? dayjs(eventDate.start.date).utc().format('YYYY-MM-DD')
             : dayjs(eventDate.start.dateTime).utc().toISOString();
 
         const end = isAllDay
-            ? dayjs(eventDate.end.date)
-                  .add(-1, 'day')
-                  .utc()
-                  .format('YYYY-MM-DD')
+            ? eventDate.start.date === eventDate.end.date
+                ? dayjs(eventDate.end.date).utc().format('YYYY-MM-DD')
+                : dayjs(eventDate.end.date)
+                      .add(-1, 'day')
+                      .utc()
+                      .format('YYYY-MM-DD')
             : dayjs(eventDate.end.dateTime).utc().toISOString();
 
         if (isOneDay) {
