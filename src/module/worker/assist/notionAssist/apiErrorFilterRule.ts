@@ -126,7 +126,9 @@ export const baseNotionAPIErrorFilterRules: NotionAPIErrorFilterRule[] = [
 
 export type ExtraNotionAPIErrorFilterRuleNames =
     | 'IGNORE_ALREADY_ARCHIVED_PAGE'
-    | 'IGNORE_NOT_FOUND';
+    | 'IGNORE_NOT_FOUND'
+    | 'ARCHIVE_DATABASE';
+
 export const extraNotionAPIErrorFilterRules: Record<
     ExtraNotionAPIErrorFilterRuleNames,
     NotionAPIErrorFilterRule
@@ -140,5 +142,19 @@ export const extraNotionAPIErrorFilterRules: Record<
     IGNORE_NOT_FOUND: {
         name: 'IGNORE_NOT_FOUND',
         condition: (err) => err.status === 404,
+    },
+    ARCHIVE_DATABASE: {
+        name: 'ARCHIVE_DATABASE',
+        condition: (err) =>
+            err.message ===
+            `Can't update a page with an archived ancestor. You must unarchive the ancestor before updating.`,
+        callback: async (err, context, args) => {
+            throw new NotionAPIError({
+                code: SyncErrorCode.notion.api.DATABASE_NOT_FOUND,
+                user: context.user,
+                err,
+                args,
+            });
+        },
     },
 };
