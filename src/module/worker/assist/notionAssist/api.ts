@@ -104,6 +104,7 @@ export class NotionAssistApi {
     @NotionAPI('page', [
         extraNotionAPIErrorFilterRules.IGNORE_ALREADY_ARCHIVED_PAGE,
         extraNotionAPIErrorFilterRules.IGNORE_NOT_FOUND,
+        extraNotionAPIErrorFilterRules.ARCHIVE_DATABASE,
     ])
     async deletePage(pageId: string) {
         try {
@@ -388,6 +389,7 @@ export class NotionAssistApi {
     @NotionAPI('page', [
         extraNotionAPIErrorFilterRules.IGNORE_NOT_FOUND,
         extraNotionAPIErrorFilterRules.IGNORE_ALREADY_ARCHIVED_PAGE,
+        extraNotionAPIErrorFilterRules.ARCHIVE_DATABASE,
     ])
     async updatePage(event: NotionEventDto) {
         const props = this.context.user.parsedNotionProps;
