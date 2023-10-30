@@ -196,7 +196,8 @@ export const baseGoogleCalendarAPIErrorFilterRules: GoogleCalendarErrorFilterRul
 
 export type ExtraGoogleCalendarAPIErrorFilterRuleNames =
     | 'IGNORE_NOT_FOUND'
-    | 'IGNORE_FORBIDDEN_FOR_NON_ORGANIZER';
+    | 'IGNORE_FORBIDDEN_FOR_NON_ORGANIZER'
+    | 'IGNORE_FORBIDDEN';
 
 export const extraGoogleCalendarAPIErrorFilterRules: Record<
     ExtraGoogleCalendarAPIErrorFilterRuleNames,
@@ -211,5 +212,10 @@ export const extraGoogleCalendarAPIErrorFilterRules: Record<
         condition: ({ status, data }) =>
             status === 403 &&
             data.error.errors[0].reason === 'forbiddenForNonOrganizer',
+    },
+    IGNORE_FORBIDDEN: {
+        name: 'IGNORE_FORBIDDEN',
+        condition: ({ status, data }) =>
+            status === 403 && data.error.message === 'Forbidden',
     },
 };
