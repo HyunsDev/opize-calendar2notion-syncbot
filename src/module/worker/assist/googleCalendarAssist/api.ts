@@ -231,6 +231,7 @@ export class GoogleCalendarAssistApi {
         extraGoogleCalendarAPIErrorFilterRules.IGNORE_NOT_FOUND,
         extraGoogleCalendarAPIErrorFilterRules.IGNORE_FORBIDDEN_FOR_NON_ORGANIZER,
         extraGoogleCalendarAPIErrorFilterRules.IGNORE_FORBIDDEN,
+        extraGoogleCalendarAPIErrorFilterRules.IGNORE_BED_REQUEST,
     ])
     async updateEvent(
         event: GoogleCalendarEventDto,
