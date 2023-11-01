@@ -198,7 +198,8 @@ export type ExtraGoogleCalendarAPIErrorFilterRuleNames =
     | 'IGNORE_NOT_FOUND'
     | 'IGNORE_FORBIDDEN_FOR_NON_ORGANIZER'
     | 'IGNORE_FORBIDDEN'
-    | 'IGNORE_BED_REQUEST';
+    | 'IGNORE_BED_REQUEST'
+    | 'IGNORE_FORBIDDEN_CANNOT_CHANGE_ORGANIZER';
 
 export const extraGoogleCalendarAPIErrorFilterRules: Record<
     ExtraGoogleCalendarAPIErrorFilterRuleNames,
@@ -223,5 +224,11 @@ export const extraGoogleCalendarAPIErrorFilterRules: Record<
         name: 'IGNORE_BED_REQUEST',
         condition: ({ status, data }) =>
             status === 400 && data.error.message === 'Bad Request',
+    },
+    IGNORE_FORBIDDEN_CANNOT_CHANGE_ORGANIZER: {
+        name: 'IGNORE_FORBIDDEN_CANNOT_CHANGE_ORGANIZER',
+        condition: ({ status, data }) =>
+            status === 403 &&
+            data.error.errors[0].reason === 'cannotChangeOrganizer',
     },
 };

@@ -146,7 +146,9 @@ export class GoogleCalendarAssistApi {
             );
     }
 
-    @GoogleCalendarAPI()
+    @GoogleCalendarAPI([
+        extraGoogleCalendarAPIErrorFilterRules.IGNORE_FORBIDDEN_CANNOT_CHANGE_ORGANIZER,
+    ])
     async moveEventCalendar(
         event: GoogleCalendarEventDto,
         beforeCalendar: CalendarEntity,
