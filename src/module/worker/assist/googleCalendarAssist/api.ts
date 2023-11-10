@@ -148,6 +148,7 @@ export class GoogleCalendarAssistApi {
 
     @GoogleCalendarAPI([
         extraGoogleCalendarAPIErrorFilterRules.IGNORE_FORBIDDEN_CANNOT_CHANGE_ORGANIZER,
+        extraGoogleCalendarAPIErrorFilterRules.IGNORE_CANNOT_CHANGE_ORGANIZER_OF_INSTANCE,
     ])
     async moveEventCalendar(
         event: GoogleCalendarEventDto,
