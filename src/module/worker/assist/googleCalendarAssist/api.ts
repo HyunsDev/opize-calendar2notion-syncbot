@@ -119,7 +119,9 @@ export class GoogleCalendarAssistApi {
         );
     }
 
-    @GoogleCalendarAPI()
+    @GoogleCalendarAPI([
+        extraGoogleCalendarAPIErrorFilterRules.IGNORE_NOT_FOUND,
+    ])
     public async getUpdatedEventsByCalendar(calendar: CalendarEntity) {
         const res = await fetchAll(async (nextPageToken) => {
             const res = await this.client.events.list({
