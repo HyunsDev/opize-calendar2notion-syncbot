@@ -58,7 +58,8 @@ export class GoogleCalendarAssist extends Assist {
     public async getUpdatedEvents() {
         const events: GoogleCalendarEventDto[] = [];
         for (const calendar of this.context.connectedCalendars) {
-            const res = await this.api.getUpdatedEventsByCalendar(calendar);
+            const res =
+                (await this.api.getUpdatedEventsByCalendar(calendar)) || [];
             events.push(...res);
         }
 
