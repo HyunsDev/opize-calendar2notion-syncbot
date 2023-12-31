@@ -26,7 +26,7 @@ export class SyncBotContext {
             free: 10,
             sponsor: 0,
         };
-        this.timeout = 1000 * 60 * 60;
+        this.timeout = 1000 * 60 * 60 * 24;
         this.stop = false;
     }
 }
