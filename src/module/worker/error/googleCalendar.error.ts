@@ -59,10 +59,6 @@ const ErrorMap: {
         message: '구글 캘린더 API 알 수 없는 오류',
         finishWork: 'RETRY',
     },
-    [SyncErrorCode.googleCalendar.api.RATE_LIMIT]: {
-        message: '구글 캘린더 API RATE_LIMIT (사용되지 않는 에러)',
-        finishWork: 'RETRY',
-    },
 };
 
 export class GoogleCalendarAPIError extends SyncError {
