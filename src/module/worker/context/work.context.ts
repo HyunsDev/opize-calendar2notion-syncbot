@@ -13,7 +13,7 @@ dayjs.extend(timezone);
 const getInitConfig = (user: UserEntity) => {
     const config = {
         timeMin:
-            user.syncYear === 0
+            user.syncYear === 0 || user.syncYear === -1
                 ? env.MIN_DATE
                 : dayjs(
                       `${user.syncYear - 1}-01-01T01:00:00+09:00`,

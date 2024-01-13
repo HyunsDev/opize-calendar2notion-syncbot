@@ -63,7 +63,9 @@ export class GoogleCalendarAssistApi {
         });
     }
 
-    @GoogleCalendarAPI()
+    @GoogleCalendarAPI([
+        extraGoogleCalendarAPIErrorFilterRules.IGNORE_BED_REQUEST,
+    ])
     public async deleteEvent(eventId: string, calendarId: string) {
         try {
             await this.client.events.delete({
